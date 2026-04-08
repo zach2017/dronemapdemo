@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Middle East Drone Command Simulation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">
+<script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+<style>
+  html, body { height: 100%; margin: 0; background:#0b1220; color:#e5e7eb; font-family: ui-sans-serif, system-ui; }
+  #map { width:100%; height:100%; background:#0f172a; }
+  .ol-zoom { top: .5em; left: .5em; }
+  .drag-item { cursor: grab; user-select:none; }
+  .drag-item:active { cursor: grabbing; }
+  .panel { backdrop-filter: blur(6px); background: rgba(15,23,42,.85); }
+  .blink { animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity:.3; } }
+  .log-entry { border-left: 2px solid #1e40af; }
+  .log-alert { border-left-color:#dc2626; }
+  .log-ok { border-left-color:#16a34a; }
+  .log-warn { border-left-color:#ca8a04; }
+  .cursor-crosshair { cursor: crosshair !important; }
+</style>
+</head>
+<body class="overflow-hidden">
+
+<div class="flex h-screen w-screen">
+  <!-- LEFT PANEL -->
+  <aside class="panel w-72 border-r border-slate-700 flex flex-col">
+    <div class="p-4 border-b border-slate-700">
+      <h1 class="text-lg font-bold text-sky-400">🛰 DRONE CMD</h1>
+      <p class="text-xs text-slate-400">Middle East Theater Simulation</p>
+    </div>
+
+    <div class="p-3 overflow-y-auto flex-1 space-y-4">
+      <div>
+        <h2 class="text-xs uppercase tracking-wider text-slate-400 mb-2">Drones (Drag to Map)</h2>
+        <div id="drone-palette" class="space-y-2"></div>
+      </div>
+      <div>
+        <h2 class="text-xs uppercase tracking-wider text-slate-400 mb-2">Defense (Drag to Map)</h2>
+        <div id="defense-palette" class="space-y-2"></div>
+      </div>
+      <div>
+        <h2 class="text-xs uppercase tracking-wider text-slate-400 mb-2">Key Targets</h2>
+        <div id="target-list" class="space-y-1 text-xs"></div>
+      </div>
+    </div>
+
+    <div class="p-3 border-t border-slate-700 space-y-2">
+      <button id="btn-launch" class="w-full bg-sky-600 hover:bg-sky-500 text-white text-sm py-2 rounded font-semibold">🚀 Launch All Missions</button>
+      <button id="btn-reset" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 rounded">Reset Theater</button>
+    </div>
+  </aside>
+
+  <!-- MAP -->
+  <main class="flex-1 relative">
+    <div id="map"></div>
+
+    <!-- TOP BAR -->
+    <div class="panel absolute top-3 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg border border-slate-700 text-sm flex gap-4 items-center">
+      <span>Mode: <span id="mode-label" class="text-sky-400 font-semibold">IDLE</span></span>
+      <span>Drones: <span id="stat-drones" class="text-sky-400">0</span></span>
+      <span>Defenses: <span id="stat-def" class="text-emerald-400">0</span></span>
+      <span>Kills: <span id="stat-kills" class="text-red-400">0</span></span>
+    </div>
+
+    <!-- SELECTED DRONE MISSION -->
+    <div id="mission-panel" class="panel absolute top-3 right-3 w-72 border border-slate-700 rounded-lg p-3 hidden">
+      <h3 class="font-semibold text-sky-400 text-sm mb-1">Mission Planner</h3>
+      <p class="text-xs text-slate-400 mb-2">Selected: <span id="sel-drone-name" class="text-white"></span></p>
+      <p class="text-xs text-slate-300 mb-2">Click the map to add waypoints, then Confirm.</p>
+      <p class="text-xs mb-2">Waypoints: <span id="wp-count" class="text-sky-300">0</span></p>
+      <div class="flex gap-2">
+        <button id="btn-confirm-mission" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-xs py-1 rounded">Confirm</button>
+        <button id="btn-cancel-mission" class="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded">Cancel</button>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="panel absolute bottom-3 left-3 right-3 h-36 border border-slate-700 rounded-lg p-2 overflow-y-auto" id="log">
+      <div class="text-xs text-slate-400">Mission log initialized. Drag assets from left panel onto the map.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   STATIC JSON CONFIG
+   ========================================================= */
+const DRONE_TYPES = [
+  { id:"recon",  name:"Recon UAV",     speed: 90000, color:"#38bdf8", icon:"🛩", hp:1, signature:0.6, desc:"Fast, light, low radar signature." },
+  { id:"strike", name:"Strike Drone",  speed: 70000, color:"#f97316", icon:"✈", hp:2, signature:1.0, desc:"Armed, medium speed, larger target." },
+  { id:"swarm",  name:"Kamikaze Swarm",speed: 55000, color:"#ef4444", icon:"🐝", hp:1, signature:0.8, desc:"Low altitude loitering munition." },
+  { id:"heavy",  name:"Heavy Bomber",  speed: 50000, color:"#a855f7", icon:"🛸", hp:3, signature:1.3, desc:"High payload, slow and vulnerable." }
+];
+
+const DEFENSE_TYPES = [
+  { id:"iron-dome", name:"Iron Dome",   range: 70000,  hitChance:0.75, color:"#22c55e", icon:"🛡", desc:"Missile interception battery." },
+  { id:"laser",     name:"Laser CIWS",  range: 40000,  hitChance:0.90, color:"#eab308", icon:"🔦", desc:"Directed energy, short range." },
+  { id:"ew",        name:"EW Jammer",   range: 90000,  hitChance:0.45, color:"#06b6d4", icon:"📡", desc:"Electronic warfare, spoofs GPS." },
+  { id:"net",       name:"Response Net",range: 15000,  hitChance:0.95, color:"#94a3b8", icon:"🕸", desc:"Close-range drone capture net." }
+];
+
+const KEY_TARGETS = [
+  { name:"Tel Aviv",    lonlat:[34.7818, 32.0853] },
+  { name:"Riyadh",      lonlat:[46.6753, 24.7136] },
+  { name:"Tehran",      lonlat:[51.3890, 35.6892] },
+  { name:"Baghdad",     lonlat:[44.3661, 33.3152] },
+  { name:"Damascus",    lonlat:[36.2765, 33.5138] },
+  { name:"Doha",        lonlat:[51.5310, 25.2854] },
+  { name:"Abu Dhabi",   lonlat:[54.3773, 24.4539] },
+  { name:"Cairo",       lonlat:[31.2357, 30.0444] },
+  { name:"Amman",       lonlat:[35.9106, 31.9539] },
+  { name:"Beirut",      lonlat:[35.5018, 33.8938] }
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  drones: [],      // { id, type, coord, path, progress, alive, hp }
+  defenses: [],    // { id, type, coord }
+  selectedDroneId: null,
+  pendingWaypoints: [],
+  kills: 0,
+  nextId: 1,
+  simRunning: false
+};
+
+/* =========================================================
+   MAP SETUP (Middle East view)
+   ========================================================= */
+const mapCenter = ol.proj.fromLonLat([44, 28]);
+const view = new ol.View({
+  center: mapCenter,
+  zoom: 5,
+  minZoom: 4,
+  maxZoom: 9,
+  extent: ol.proj.transformExtent([20, 10, 70, 45], 'EPSG:4326', 'EPSG:3857')
+});
+
+// Vector sources/layers
+const targetSource  = new ol.source.Vector();
+const defenseSource = new ol.source.Vector();
+const rangeSource   = new ol.source.Vector();
+const droneSource   = new ol.source.Vector();
+const pathSource    = new ol.source.Vector();
+const effectSource  = new ol.source.Vector();
+
+const map = new ol.Map({
+  target: 'map',
+  layers: [
+    new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://{a-c}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        attributions:'© OpenStreetMap, © CARTO'
+      })
+    }),
+    new ol.layer.Vector({ source: rangeSource }),
+    new ol.layer.Vector({ source: pathSource }),
+    new ol.layer.Vector({ source: targetSource }),
+    new ol.layer.Vector({ source: defenseSource }),
+    new ol.layer.Vector({ source: droneSource }),
+    new ol.layer.Vector({ source: effectSource })
+  ],
+  view
+});
+
+/* =========================================================
+   STYLES
+   ========================================================= */
+function textStyle(text, color) {
+  return new ol.style.Text({
+    text, font:'bold 16px sans-serif',
+    fill:new ol.style.Fill({color}),
+    stroke:new ol.style.Stroke({color:'#000', width:3})
+  });
+}
+
+function droneStyle(f) {
+  const d = f.get('data');
+  if (!d.alive) {
+    return new ol.style.Style({ text: textStyle('💥','#f87171') });
+  }
+  const type = DRONE_TYPES.find(t=>t.id===d.type);
+  return new ol.style.Style({
+    text: new ol.style.Text({
+      text: type.icon,
+      font:'18px sans-serif',
+      fill:new ol.style.Fill({color: type.color}),
+      stroke:new ol.style.Stroke({color:'#000',width:2}),
+      offsetY:-2
+    })
+  });
+}
+
+function defenseStyle(f) {
+  const d = f.get('data');
+  const type = DEFENSE_TYPES.find(t=>t.id===d.type);
+  return new ol.style.Style({ text: textStyle(type.icon, type.color) });
+}
+
+function targetStyle(f) {
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius:5,
+      fill:new ol.style.Fill({color:'#facc15'}),
+      stroke:new ol.style.Stroke({color:'#000',width:1})
+    }),
+    text: new ol.style.Text({
+      text: f.get('name'),
+      offsetY:-12, font:'11px sans-serif',
+      fill:new ol.style.Fill({color:'#fde68a'}),
+      stroke:new ol.style.Stroke({color:'#000',width:3})
+    })
+  });
+}
+
+droneSource.on('addfeature', e => e.feature.setStyle(droneStyle(e.feature)));
+defenseSource.on('addfeature', e => e.feature.setStyle(defenseStyle(e.feature)));
+
+/* =========================================================
+   POPULATE TARGETS
+   ========================================================= */
+KEY_TARGETS.forEach(t => {
+  const f = new ol.Feature({
+    geometry: new ol.geom.Point(ol.proj.fromLonLat(t.lonlat)),
+    name: t.name
+  });
+  f.setStyle(targetStyle(f));
+  targetSource.addFeature(f);
+});
+
+/* =========================================================
+   UI BUILD
+   ========================================================= */
+const dronePalette = document.getElementById('drone-palette');
+DRONE_TYPES.forEach(t => {
+  const el = document.createElement('div');
+  el.className = "drag-item bg-slate-800 border border-slate-700 hover:border-sky-500 rounded p-2 text-xs";
+  el.draggable = true;
+  el.dataset.kind = "drone";
+  el.dataset.type = t.id;
+  el.innerHTML = `<div class="flex items-center gap-2"><span class="text-lg">${t.icon}</span><div><div class="font-semibold" style="color:${t.color}">${t.name}</div><div class="text-slate-400">${t.desc}</div></div></div>`;
+  dronePalette.appendChild(el);
+});
+
+const defensePalette = document.getElementById('defense-palette');
+DEFENSE_TYPES.forEach(t => {
+  const el = document.createElement('div');
+  el.className = "drag-item bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded p-2 text-xs";
+  el.draggable = true;
+  el.dataset.kind = "defense";
+  el.dataset.type = t.id;
+  el.innerHTML = `<div class="flex items-center gap-2"><span class="text-lg">${t.icon}</span><div><div class="font-semibold" style="color:${t.color}">${t.name}</div><div class="text-slate-400">${t.desc}</div></div></div>`;
+  defensePalette.appendChild(el);
+});
+
+const targetList = document.getElementById('target-list');
+KEY_TARGETS.forEach(t => {
+  const el = document.createElement('button');
+  el.className = "block w-full text-left bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded text-slate-300";
+  el.textContent = "📍 " + t.name;
+  el.onclick = () => view.animate({ center: ol.proj.fromLonLat(t.lonlat), zoom: 7, duration:600 });
+  targetList.appendChild(el);
+});
+
+/* =========================================================
+   DRAG & DROP
+   ========================================================= */
+let dragData = null;
+document.querySelectorAll('.drag-item').forEach(el => {
+  el.addEventListener('dragstart', e => {
+    dragData = { kind: el.dataset.kind, type: el.dataset.type };
+    e.dataTransfer.effectAllowed = "copy";
+  });
+});
+
+const mapEl = document.getElementById('map');
+mapEl.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect="copy"; });
+mapEl.addEventListener('drop', e => {
+  e.preventDefault();
+  if (!dragData) return;
+  const rect = mapEl.getBoundingClientRect();
+  const pixel = [e.clientX - rect.left, e.clientY - rect.top];
+  const coord = map.getCoordinateFromPixel(pixel);
+  if (dragData.kind === "drone")  deployDrone(dragData.type, coord);
+  if (dragData.kind === "defense") deployDefense(dragData.type, coord);
+  dragData = null;
+});
+
+/* =========================================================
+   DEPLOY FUNCTIONS
+   ========================================================= */
+function deployDrone(typeId, coord) {
+  const type = DRONE_TYPES.find(t=>t.id===typeId);
+  const id = state.nextId++;
+  const drone = { id, type: typeId, coord, path: null, progress: 0, alive: true, hp: type.hp, name: `${type.name} #${id}` };
+  state.drones.push(drone);
+  const f = new ol.Feature({ geometry: new ol.geom.Point(coord), data: drone, kind:'drone', id });
+  f.setStyle(droneStyle(f));
+  droneSource.addFeature(f);
+  log(`✅ Deployed ${drone.name}. Click it to plan a mission.`, 'ok');
+  updateStats();
+}
+
+function deployDefense(typeId, coord) {
+  const type = DEFENSE_TYPES.find(t=>t.id===typeId);
+  const id = state.nextId++;
+  const def = { id, type: typeId, coord };
+  state.defenses.push(def);
+
+  const f = new ol.Feature({ geometry: new ol.geom.Point(coord), data: def, kind:'defense', id });
+  f.setStyle(defenseStyle(f));
+  defenseSource.addFeature(f);
+
+  // range ring
+  const ring = new ol.Feature({
+    geometry: new ol.geom.Circle(coord, type.range),
+    id
+  });
+  ring.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: type.color, width:1.5, lineDash:[4,4] }),
+    fill: new ol.style.Fill({ color: type.color+'18' })
+  }));
+  rangeSource.addFeature(ring);
+
+  log(`🛡 Deployed ${type.name} (range ${(type.range/1000).toFixed(0)} km).`, 'ok');
+  updateStats();
+}
+
+/* =========================================================
+   DRONE SELECT + MISSION PLANNING
+   ========================================================= */
+map.on('click', (e) => {
+  // If planning mission, add waypoint
+  if (state.selectedDroneId !== null) {
+    state.pendingWaypoints.push(e.coordinate);
+    document.getElementById('wp-count').textContent = state.pendingWaypoints.length;
+    drawPendingPath();
+    return;
+  }
+  // Otherwise: try selecting a drone
+  const hit = map.forEachFeatureAtPixel(e.pixel, f => (f.get('kind')==='drone' ? f : null));
+  if (hit) {
+    const data = hit.get('data');
+    if (!data.alive) return;
+    state.selectedDroneId = data.id;
+    state.pendingWaypoints = [data.coord];
+    document.getElementById('mission-panel').classList.remove('hidden');
+    document.getElementById('sel-drone-name').textContent = data.name;
+    document.getElementById('wp-count').textContent = 1;
+    document.getElementById('mode-label').textContent = "PLANNING";
+    mapEl.classList.add('cursor-crosshair');
+    drawPendingPath();
+    log(`🎯 Planning mission for ${data.name}. Click map to add waypoints.`, 'warn');
+  }
+});
+
+function drawPendingPath() {
+  pathSource.getFeatures()
+    .filter(f=>f.get('pending'))
+    .forEach(f=>pathSource.removeFeature(f));
+  if (state.pendingWaypoints.length < 2) return;
+  const f = new ol.Feature({
+    geometry: new ol.geom.LineString(state.pendingWaypoints),
+    pending: true
+  });
+  f.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color:'#fbbf24', width:2, lineDash:[6,6] })
+  }));
+  pathSource.addFeature(f);
+}
+
+document.getElementById('btn-confirm-mission').onclick = () => {
+  if (state.pendingWaypoints.length < 2) { log('⚠ Add at least one waypoint.', 'warn'); return; }
+  const drone = state.drones.find(d=>d.id===state.selectedDroneId);
+  drone.path = state.pendingWaypoints.slice();
+  drone.progress = 0;
+
+  // remove pending style, add committed path
+  pathSource.getFeatures().filter(f=>f.get('pending')).forEach(f=>pathSource.removeFeature(f));
+  const committed = new ol.Feature({
+    geometry: new ol.geom.LineString(drone.path),
+    droneId: drone.id
+  });
+  const typeColor = DRONE_TYPES.find(t=>t.id===drone.type).color;
+  committed.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: typeColor, width:2 })
+  }));
+  pathSource.addFeature(committed);
+
+  log(`📋 Mission set for ${drone.name} (${drone.path.length-1} legs).`, 'ok');
+  cancelPlanning();
+};
+
+document.getElementById('btn-cancel-mission').onclick = cancelPlanning;
+
+function cancelPlanning() {
+  state.selectedDroneId = null;
+  state.pendingWaypoints = [];
+  pathSource.getFeatures().filter(f=>f.get('pending')).forEach(f=>pathSource.removeFeature(f));
+  document.getElementById('mission-panel').classList.add('hidden');
+  document.getElementById('mode-label').textContent = state.simRunning ? "LIVE" : "IDLE";
+  mapEl.classList.remove('cursor-crosshair');
+}
+
+/* =========================================================
+   SIMULATION LOOP
+   ========================================================= */
+document.getElementById('btn-launch').onclick = () => {
+  const armed = state.drones.filter(d=>d.alive && d.path && d.path.length>1);
+  if (armed.length === 0) { log('⚠ No drones have mission paths.', 'warn'); return; }
+  state.simRunning = true;
+  document.getElementById('mode-label').textContent = "LIVE";
+  log(`🚀 Launching ${armed.length} mission(s).`, 'ok');
+};
+
+document.getElementById('btn-reset').onclick = () => {
+  state.drones = [];
+  state.defenses = [];
+  state.kills = 0;
+  state.simRunning = false;
+  state.selectedDroneId = null;
+  state.pendingWaypoints = [];
+  droneSource.clear(); defenseSource.clear(); rangeSource.clear();
+  pathSource.clear(); effectSource.clear();
+  document.getElementById('mission-panel').classList.add('hidden');
+  document.getElementById('mode-label').textContent = "IDLE";
+  log('♻ Theater reset.', 'warn');
+  updateStats();
+};
+
+function distance(a,b) {
+  const dx=a[0]-b[0], dy=a[1]-b[1];
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+let lastTick = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now-lastTick)/1000);
+  lastTick = now;
+
+  if (state.simRunning) {
+    // Move drones
+    state.drones.forEach(drone => {
+      if (!drone.alive || !drone.path) return;
+      const type = DRONE_TYPES.find(t=>t.id===drone.type);
+      let remaining = type.speed * dt;
+      while (remaining > 0 && drone.progress < drone.path.length-1) {
+        const a = drone.coord;
+        const b = drone.path[drone.progress+1];
+        const d = distance(a,b);
+        if (d <= remaining) {
+          drone.coord = b;
+          drone.progress++;
+          remaining -= d;
+        } else {
+          const t = remaining / d;
+          drone.coord = [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];
+          remaining = 0;
+        }
+      }
+      // update feature geometry
+      const feat = droneSource.getFeatures().find(f=>f.get('id')===drone.id);
+      if (feat) feat.getGeometry().setCoordinates(drone.coord);
+
+      if (drone.progress >= drone.path.length-1) {
+        log(`🎯 ${drone.name} reached final waypoint — objective complete.`, 'ok');
+        drone.path = null;
+      }
+    });
+
+    // Defense engagements
+    state.defenses.forEach(def => {
+      const type = DEFENSE_TYPES.find(t=>t.id===def.type);
+      state.drones.forEach(drone => {
+        if (!drone.alive) return;
+        const d = distance(def.coord, drone.coord);
+        if (d <= type.range) {
+          // probability per tick scaled
+          const chance = type.hitChance * dt * 0.8;
+          if (Math.random() < chance) {
+            drone.hp--;
+            spawnEffect(drone.coord, type.color);
+            if (drone.hp <= 0) {
+              drone.alive = false;
+              state.kills++;
+              const msg = def.type==='net'
+                ? `🕸 ${type.name} captured ${drone.name}!`
+                : `💥 ${type.name} destroyed ${drone.name}!`;
+              log(msg, 'alert');
+              const feat = droneSource.getFeatures().find(f=>f.get('id')===drone.id);
+              if (feat) feat.setStyle(droneStyle(feat));
+              updateStats();
+            } else {
+              log(`⚠ ${type.name} hit ${drone.name} (HP ${drone.hp}).`, 'warn');
+            }
+          }
+        }
+      });
+    });
+
+    // Fade effects
+    effectSource.getFeatures().forEach(f => {
+      const ttl = f.get('ttl') - dt;
+      if (ttl <= 0) effectSource.removeFeature(f);
+      else f.set('ttl', ttl);
+    });
+  }
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function spawnEffect(coord, color) {
+  const f = new ol.Feature({ geometry: new ol.geom.Point(coord), ttl: 0.6 });
+  f.setStyle(new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 10,
+      fill: new ol.style.Fill({ color: color+'88' }),
+      stroke: new ol.style.Stroke({ color:'#fff', width:1 })
+    })
+  }));
+  effectSource.addFeature(f);
+}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+function updateStats() {
+  document.getElementById('stat-drones').textContent = state.drones.filter(d=>d.alive).length;
+  document.getElementById('stat-def').textContent = state.defenses.length;
+  document.getElementById('stat-kills').textContent = state.kills;
+}
+
+function log(msg, kind='') {
+  const el = document.getElementById('log');
+  const row = document.createElement('div');
+  row.className = `log-entry px-2 py-1 my-1 text-xs ${kind==='alert'?'log-alert text-red-300':kind==='ok'?'log-ok text-emerald-300':kind==='warn'?'log-warn text-amber-300':'text-slate-300'}`;
+  const time = new Date().toLocaleTimeString();
+  row.innerHTML = `<span class="text-slate-500">[${time}]</span> ${msg}`;
+  el.appendChild(row);
+  el.scrollTop = el.scrollHeight;
+}
+
+log('🟢 System online. Drag drones & defenses to map. Click a deployed drone to plan a mission.', 'ok');
+</script>
+</body>
+</html>
