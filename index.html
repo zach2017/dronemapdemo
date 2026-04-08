@@ -42,6 +42,12 @@
         <div id="defense-palette" class="space-y-2"></div>
       </div>
       <div>
+        <h2 class="text-xs uppercase tracking-wider text-slate-400 mb-2">Missions</h2>
+        <div id="mission-list" class="space-y-1 text-xs">
+          <div class="text-slate-500 italic">No drones deployed.</div>
+        </div>
+      </div>
+      <div>
         <h2 class="text-xs uppercase tracking-wider text-slate-400 mb-2">Key Targets</h2>
         <div id="target-list" class="space-y-1 text-xs"></div>
       </div>
@@ -65,15 +71,32 @@
       <span>Kills: <span id="stat-kills" class="text-red-400">0</span></span>
     </div>
 
-    <!-- SELECTED DRONE MISSION -->
-    <div id="mission-panel" class="panel absolute top-3 right-3 w-72 border border-slate-700 rounded-lg p-3 hidden">
-      <h3 class="font-semibold text-sky-400 text-sm mb-1">Mission Planner</h3>
-      <p class="text-xs text-slate-400 mb-2">Selected: <span id="sel-drone-name" class="text-white"></span></p>
-      <p class="text-xs text-slate-300 mb-2">Click the map to add waypoints, then Confirm.</p>
-      <p class="text-xs mb-2">Waypoints: <span id="wp-count" class="text-sky-300">0</span></p>
-      <div class="flex gap-2">
-        <button id="btn-confirm-mission" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-xs py-1 rounded">Confirm</button>
-        <button id="btn-cancel-mission" class="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded">Cancel</button>
+    <!-- DRONE CONTEXT POPUP (appears at drone on click) -->
+    <div id="drone-popup" class="panel absolute border border-sky-600 rounded-lg p-2 hidden z-20 w-52 shadow-xl">
+      <div class="flex items-center justify-between mb-2">
+        <span id="popup-drone-name" class="text-xs font-semibold text-sky-300"></span>
+        <button id="popup-close" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+      <div id="popup-info" class="text-[10px] text-slate-400 mb-2"></div>
+      <div class="flex flex-col gap-1">
+        <button data-act="create" class="popup-btn bg-sky-600 hover:bg-sky-500 text-xs py-1 rounded">➕ Create Mission</button>
+        <button data-act="select" class="popup-btn bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded">👁 View Mission</button>
+        <button data-act="delete" class="popup-btn bg-red-700 hover:bg-red-600 text-xs py-1 rounded">🗑 Delete Mission</button>
+        <button data-act="remove" class="popup-btn bg-slate-800 hover:bg-red-900 text-xs py-1 rounded border border-red-900">❌ Remove Drone</button>
+      </div>
+    </div>
+
+    <!-- MISSION BUILDER (active while placing waypoints) -->
+    <div id="builder-panel" class="panel absolute top-3 right-3 w-72 border border-amber-600 rounded-lg p-3 hidden z-10">
+      <h3 class="font-semibold text-amber-400 text-sm mb-1">✏ Building Mission</h3>
+      <p class="text-xs text-slate-400 mb-2">Drone: <span id="sel-drone-name" class="text-white"></span></p>
+      <p class="text-xs text-slate-300 mb-2">Click map to drop waypoints. Drag-click also works.</p>
+      <p class="text-xs mb-2">Waypoints: <span id="wp-count" class="text-amber-300">0</span></p>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btn-confirm-mission" class="bg-emerald-600 hover:bg-emerald-500 text-xs py-1 rounded">✓ Finish</button>
+        <button id="btn-undo-wp" class="bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded">↶ Undo</button>
+        <button id="btn-clear-wp" class="bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded">Clear</button>
+        <button id="btn-cancel-mission" class="bg-red-800 hover:bg-red-700 text-xs py-1 rounded">✕ Cancel</button>
       </div>
     </div>
 
@@ -303,6 +326,7 @@ function deployDrone(typeId, coord) {
   droneSource.addFeature(f);
   log(`✅ Deployed ${drone.name}. Click it to plan a mission.`, 'ok');
   updateStats();
+  renderMissionList();
 }
 
 function deployDefense(typeId, coord) {
@@ -331,46 +355,198 @@ function deployDefense(typeId, coord) {
 }
 
 /* =========================================================
-   DRONE SELECT + MISSION PLANNING
+   DRONE SELECT + POPUP + MISSION PLANNING
    ========================================================= */
+const popup = document.getElementById('drone-popup');
+const popupOverlay = new ol.Overlay({
+  element: popup,
+  offset: [14, -14],
+  positioning: 'bottom-left',
+  stopEvent: true
+});
+map.addOverlay(popupOverlay);
+
+let popupDroneId = null;
+let mode = 'idle'; // 'idle' | 'building'
+
 map.on('click', (e) => {
-  // If planning mission, add waypoint
-  if (state.selectedDroneId !== null) {
+  // If building a mission, every map click adds a waypoint
+  if (mode === 'building') {
+    // Ignore clicks on the popup itself
     state.pendingWaypoints.push(e.coordinate);
     document.getElementById('wp-count').textContent = state.pendingWaypoints.length;
     drawPendingPath();
     return;
   }
-  // Otherwise: try selecting a drone
+
+  // Otherwise: try selecting a drone -> open popup
   const hit = map.forEachFeatureAtPixel(e.pixel, f => (f.get('kind')==='drone' ? f : null));
   if (hit) {
     const data = hit.get('data');
     if (!data.alive) return;
-    state.selectedDroneId = data.id;
-    state.pendingWaypoints = [data.coord];
-    document.getElementById('mission-panel').classList.remove('hidden');
-    document.getElementById('sel-drone-name').textContent = data.name;
-    document.getElementById('wp-count').textContent = 1;
-    document.getElementById('mode-label').textContent = "PLANNING";
-    mapEl.classList.add('cursor-crosshair');
-    drawPendingPath();
-    log(`🎯 Planning mission for ${data.name}. Click map to add waypoints.`, 'warn');
+    openDronePopup(data);
+  } else {
+    closeDronePopup();
   }
 });
+
+// Hover cursor feedback
+map.on('pointermove', (e) => {
+  if (mode === 'building') return;
+  const hit = map.hasFeatureAtPixel(e.pixel, {
+    layerFilter: l => l.getSource() === droneSource
+  });
+  map.getTargetElement().style.cursor = hit ? 'pointer' : '';
+});
+
+function openDronePopup(drone) {
+  popupDroneId = drone.id;
+  const type = DRONE_TYPES.find(t=>t.id===drone.type);
+  document.getElementById('popup-drone-name').textContent = `${type.icon} ${drone.name}`;
+  const hasMission = !!(drone.path && drone.path.length > 1);
+  document.getElementById('popup-info').innerHTML = hasMission
+    ? `<span class="text-emerald-400">● Mission active</span> · ${drone.path.length-1} legs · HP ${drone.hp}/${type.hp}`
+    : `<span class="text-slate-500">● No mission</span> · HP ${drone.hp}/${type.hp}`;
+
+  // Toggle buttons based on state
+  popup.querySelector('[data-act="select"]').disabled = !hasMission;
+  popup.querySelector('[data-act="delete"]').disabled = !hasMission;
+  popup.querySelectorAll('.popup-btn').forEach(b => {
+    b.classList.toggle('opacity-40', b.disabled);
+    b.classList.toggle('cursor-not-allowed', b.disabled);
+  });
+
+  popupOverlay.setPosition(drone.coord);
+  popup.classList.remove('hidden');
+}
+
+function closeDronePopup() {
+  popup.classList.add('hidden');
+  popupDroneId = null;
+}
+
+document.getElementById('popup-close').onclick = closeDronePopup;
+
+// Popup action buttons
+popup.querySelectorAll('.popup-btn').forEach(btn => {
+  btn.onclick = () => {
+    if (btn.disabled) return;
+    const drone = state.drones.find(d=>d.id===popupDroneId);
+    if (!drone) return;
+    const act = btn.dataset.act;
+    if (act === 'create')  startBuildingMission(drone);
+    if (act === 'select')  viewMission(drone);
+    if (act === 'delete')  deleteMission(drone);
+    if (act === 'remove')  removeDrone(drone);
+  };
+});
+
+function startBuildingMission(drone) {
+  // Clear any existing path visuals for this drone first
+  clearPathFeatures(drone.id);
+  drone.path = null;
+  drone.progress = 0;
+
+  mode = 'building';
+  state.selectedDroneId = drone.id;
+  state.pendingWaypoints = [drone.coord];
+
+  document.getElementById('builder-panel').classList.remove('hidden');
+  document.getElementById('sel-drone-name').textContent = drone.name;
+  document.getElementById('wp-count').textContent = 1;
+  document.getElementById('mode-label').textContent = "PLANNING";
+  mapEl.classList.add('cursor-crosshair');
+  closeDronePopup();
+  drawPendingPath();
+  log(`🎯 Building mission for ${drone.name}. Click map to add waypoints.`, 'warn');
+  renderMissionList();
+}
+
+function viewMission(drone) {
+  if (!drone.path) return;
+  const extent = ol.extent.boundingExtent(drone.path);
+  view.fit(extent, { padding:[80,80,80,80], duration:600, maxZoom:8 });
+  // Flash the path
+  const feat = pathSource.getFeatures().find(f => f.get('droneId') === drone.id);
+  if (feat) {
+    let on = true;
+    const orig = feat.getStyle();
+    const flash = new ol.style.Style({
+      stroke: new ol.style.Stroke({ color:'#fff', width:4 })
+    });
+    const iv = setInterval(() => {
+      feat.setStyle(on ? flash : orig);
+      on = !on;
+    }, 200);
+    setTimeout(() => { clearInterval(iv); feat.setStyle(orig); }, 1600);
+  }
+  log(`👁 Viewing mission for ${drone.name}.`, 'ok');
+}
+
+function deleteMission(drone) {
+  clearPathFeatures(drone.id);
+  drone.path = null;
+  drone.progress = 0;
+  log(`🗑 Mission deleted for ${drone.name}.`, 'warn');
+  closeDronePopup();
+  renderMissionList();
+}
+
+function removeDrone(drone) {
+  clearPathFeatures(drone.id);
+  const feat = droneSource.getFeatures().find(f=>f.get('id')===drone.id);
+  if (feat) droneSource.removeFeature(feat);
+  state.drones = state.drones.filter(d => d.id !== drone.id);
+  log(`❌ Removed ${drone.name} from theater.`, 'warn');
+  closeDronePopup();
+  updateStats();
+  renderMissionList();
+}
+
+function clearPathFeatures(droneId) {
+  pathSource.getFeatures()
+    .filter(f => f.get('droneId') === droneId)
+    .forEach(f => pathSource.removeFeature(f));
+}
 
 function drawPendingPath() {
   pathSource.getFeatures()
     .filter(f=>f.get('pending'))
     .forEach(f=>pathSource.removeFeature(f));
-  if (state.pendingWaypoints.length < 2) return;
-  const f = new ol.Feature({
-    geometry: new ol.geom.LineString(state.pendingWaypoints),
-    pending: true
+
+  if (state.pendingWaypoints.length >= 2) {
+    const line = new ol.Feature({
+      geometry: new ol.geom.LineString(state.pendingWaypoints),
+      pending: true
+    });
+    line.setStyle(new ol.style.Style({
+      stroke: new ol.style.Stroke({ color:'#fbbf24', width:2, lineDash:[6,6] })
+    }));
+    pathSource.addFeature(line);
+  }
+  // waypoint dots
+  state.pendingWaypoints.forEach((c, i) => {
+    if (i === 0) return; // skip start (drone position)
+    const dot = new ol.Feature({
+      geometry: new ol.geom.Point(c),
+      pending: true
+    });
+    dot.setStyle(new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 4,
+        fill: new ol.style.Fill({ color:'#fbbf24' }),
+        stroke: new ol.style.Stroke({ color:'#000', width:1 })
+      }),
+      text: new ol.style.Text({
+        text: String(i),
+        font:'bold 10px sans-serif',
+        offsetY:-10,
+        fill: new ol.style.Fill({ color:'#fde68a' }),
+        stroke: new ol.style.Stroke({ color:'#000', width:2 })
+      })
+    }));
+    pathSource.addFeature(dot);
   });
-  f.setStyle(new ol.style.Style({
-    stroke: new ol.style.Stroke({ color:'#fbbf24', width:2, lineDash:[6,6] })
-  }));
-  pathSource.addFeature(f);
 }
 
 document.getElementById('btn-confirm-mission').onclick = () => {
@@ -379,31 +555,117 @@ document.getElementById('btn-confirm-mission').onclick = () => {
   drone.path = state.pendingWaypoints.slice();
   drone.progress = 0;
 
-  // remove pending style, add committed path
   pathSource.getFeatures().filter(f=>f.get('pending')).forEach(f=>pathSource.removeFeature(f));
+  const typeColor = DRONE_TYPES.find(t=>t.id===drone.type).color;
   const committed = new ol.Feature({
     geometry: new ol.geom.LineString(drone.path),
     droneId: drone.id
   });
-  const typeColor = DRONE_TYPES.find(t=>t.id===drone.type).color;
   committed.setStyle(new ol.style.Style({
     stroke: new ol.style.Stroke({ color: typeColor, width:2 })
   }));
   pathSource.addFeature(committed);
 
+  // add waypoint markers for the committed path
+  drone.path.forEach((c, i) => {
+    if (i === 0) return;
+    const dot = new ol.Feature({
+      geometry: new ol.geom.Point(c),
+      droneId: drone.id
+    });
+    dot.setStyle(new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 3,
+        fill: new ol.style.Fill({ color: typeColor }),
+        stroke: new ol.style.Stroke({ color:'#000', width:1 })
+      })
+    }));
+    pathSource.addFeature(dot);
+  });
+
   log(`📋 Mission set for ${drone.name} (${drone.path.length-1} legs).`, 'ok');
-  cancelPlanning();
+  endBuilding();
+  renderMissionList();
 };
 
-document.getElementById('btn-cancel-mission').onclick = cancelPlanning;
+document.getElementById('btn-cancel-mission').onclick = () => {
+  log('↩ Mission build cancelled.', 'warn');
+  endBuilding();
+};
 
-function cancelPlanning() {
+document.getElementById('btn-undo-wp').onclick = () => {
+  if (state.pendingWaypoints.length > 1) {
+    state.pendingWaypoints.pop();
+    document.getElementById('wp-count').textContent = state.pendingWaypoints.length;
+    drawPendingPath();
+  }
+};
+
+document.getElementById('btn-clear-wp').onclick = () => {
+  state.pendingWaypoints = state.pendingWaypoints.slice(0,1);
+  document.getElementById('wp-count').textContent = 1;
+  drawPendingPath();
+};
+
+function endBuilding() {
+  mode = 'idle';
   state.selectedDroneId = null;
   state.pendingWaypoints = [];
   pathSource.getFeatures().filter(f=>f.get('pending')).forEach(f=>pathSource.removeFeature(f));
-  document.getElementById('mission-panel').classList.add('hidden');
+  document.getElementById('builder-panel').classList.add('hidden');
   document.getElementById('mode-label').textContent = state.simRunning ? "LIVE" : "IDLE";
   mapEl.classList.remove('cursor-crosshair');
+}
+
+/* =========================================================
+   MISSION LIST (sidebar)
+   ========================================================= */
+function renderMissionList() {
+  const wrap = document.getElementById('mission-list');
+  if (state.drones.length === 0) {
+    wrap.innerHTML = '<div class="text-slate-500 italic">No drones deployed.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  state.drones.forEach(drone => {
+    const type = DRONE_TYPES.find(t=>t.id===drone.type);
+    const hasMission = !!(drone.path && drone.path.length > 1);
+    const dead = !drone.alive;
+    const row = document.createElement('div');
+    row.className = `bg-slate-800/60 border border-slate-700 rounded p-1.5 ${dead?'opacity-50':''}`;
+    row.innerHTML = `
+      <div class="flex items-center justify-between gap-1">
+        <button class="truncate text-left flex-1 hover:text-sky-300" title="Focus">
+          <span style="color:${type.color}">${type.icon}</span> ${drone.name}
+        </button>
+        <div class="flex gap-0.5">
+          <button data-a="create" class="px-1 bg-sky-700 hover:bg-sky-600 rounded" title="Create mission">➕</button>
+          <button data-a="view"   class="px-1 bg-slate-600 hover:bg-slate-500 rounded ${hasMission?'':'opacity-40 cursor-not-allowed'}" title="View mission">👁</button>
+          <button data-a="del"    class="px-1 bg-red-700 hover:bg-red-600 rounded ${hasMission?'':'opacity-40 cursor-not-allowed'}" title="Delete mission">🗑</button>
+        </div>
+      </div>
+      <div class="text-[10px] text-slate-500 mt-0.5">
+        ${dead ? '☠ destroyed' : hasMission ? `● ${drone.path.length-1} legs` : '○ idle'}
+      </div>
+    `;
+    // focus button
+    row.querySelector('button').onclick = () => {
+      view.animate({ center: drone.coord, zoom: 7, duration:500 });
+      if (drone.alive) openDronePopup(drone);
+    };
+    // action buttons
+    row.querySelectorAll('[data-a]').forEach(b => {
+      b.onclick = (ev) => {
+        ev.stopPropagation();
+        if (b.classList.contains('cursor-not-allowed')) return;
+        if (!drone.alive) return;
+        if (b.dataset.a === 'create') startBuildingMission(drone);
+        if (b.dataset.a === 'view')   viewMission(drone);
+        if (b.dataset.a === 'del')    deleteMission(drone);
+      };
+    });
+    wrap.appendChild(row);
+  });
 }
 
 /* =========================================================
@@ -426,10 +688,12 @@ document.getElementById('btn-reset').onclick = () => {
   state.pendingWaypoints = [];
   droneSource.clear(); defenseSource.clear(); rangeSource.clear();
   pathSource.clear(); effectSource.clear();
-  document.getElementById('mission-panel').classList.add('hidden');
+  closeDronePopup();
+  endBuilding();
   document.getElementById('mode-label').textContent = "IDLE";
   log('♻ Theater reset.', 'warn');
   updateStats();
+  renderMissionList();
 };
 
 function distance(a,b) {
@@ -494,6 +758,7 @@ function tick(now) {
               const feat = droneSource.getFeatures().find(f=>f.get('id')===drone.id);
               if (feat) feat.setStyle(droneStyle(feat));
               updateStats();
+              renderMissionList();
             } else {
               log(`⚠ ${type.name} hit ${drone.name} (HP ${drone.hp}).`, 'warn');
             }
