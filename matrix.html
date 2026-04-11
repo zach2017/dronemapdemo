@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Matrix Math & AI — Middle School Guide</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+  /* ══════════════════════════════════════════
+     DARK MODE (default)
+  ══════════════════════════════════════════ */
+  :root {
+    --bg: #07080f;
+    --bg2: #0e0f1a;
+    --surface: #0e0f1a;
+    --surface2: #13142200;
+    --modal-bg: #11121e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent1: #4df0c0;
+    --accent2: #f0b44d;
+    --accent3: #b44df0;
+    --text: #e2e4f0;
+    --text2: #b0b3cc;
+    --muted: #7a7d99;
+    --muted2: #555;
+    --grid-line: rgba(77,240,192,0.03);
+    --hero-glow1: rgba(77,240,192,0.08);
+    --hero-glow2: rgba(180,77,240,0.06);
+    --card-hover-border: rgba(77,240,192,0.25);
+    --mcell-bg: rgba(255,255,255,0.04);
+    --mcell-border: rgba(255,255,255,0.09);
+    --mcell-text: #e2e4f0;
+    --code-bg: #080810;
+    --res-bg: rgba(255,255,255,0.03);
+    --res-border: rgba(255,255,255,0.08);
+    --quiz-bg: rgba(255,255,255,0.04);
+    --quiz-border: rgba(255,255,255,0.1);
+    --yt-thumb-bg: linear-gradient(135deg, #1a0505, #2a0808);
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --toggle-track: rgba(255,255,255,0.1);
+    --toggle-knob: #e2e4f0;
+    --footer-text: #444;
+    --invert-icon: 0;
+    color-scheme: dark;
+  }
+
+/* ══════════════════════════════════════════
+LIGHT MODE
+══════════════════════════════════════════ */
+html.light {
+–bg: #f0f2f8;
+–bg2: #e6e9f4;
+–surface: #ffffff;
+–surface2: #f7f8fc;
+–modal-bg: #ffffff;
+–border: rgba(0,0,0,0.08);
+–border2: rgba(0,0,0,0.14);
+–accent1: #0d9e7a;
+–accent2: #c47d00;
+–accent3: #7c22d4;
+–text: #1a1c2e;
+–text2: #3a3d55;
+–muted: #6b6e8a;
+–muted2: #9a9dba;
+–grid-line: rgba(13,158,122,0.06);
+–hero-glow1: rgba(13,158,122,0.07);
+–hero-glow2: rgba(124,34,212,0.05);
+–card-hover-border: rgba(13,158,122,0.35);
+–mcell-bg: rgba(0,0,0,0.04);
+–mcell-border: rgba(0,0,0,0.1);
+–mcell-text: #2a2c40;
+–code-bg: #eef0f8;
+–res-bg: rgba(0,0,0,0.02);
+–res-border: rgba(0,0,0,0.08);
+–quiz-bg: rgba(0,0,0,0.03);
+–quiz-border: rgba(0,0,0,0.1);
+–yt-thumb-bg: linear-gradient(135deg, #3a0a0a, #5a1010);
+–shadow: 0 4px 24px rgba(0,0,0,0.12);
+–toggle-track: rgba(0,0,0,0.12);
+–toggle-knob: #1a1c2e;
+–footer-text: #aaa;
+–invert-icon: 1;
+color-scheme: light;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Lora’, serif;
+min-height: 100vh;
+overflow-x: hidden;
+transition: background 0.4s, color 0.4s;
+}
+
+h1, h2, h3, h4 { font-family: ‘Syne’, sans-serif; }
+code, .mono { font-family: ‘IBM Plex Mono’, monospace; }
+
+/* ─── Animated grid bg ─── */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(var(–grid-line) 1px, transparent 1px),
+linear-gradient(90deg, var(–grid-line) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+transition: background-image 0.4s;
+}
+
+/* ─── Theme toggle button ─── */
+#theme-toggle {
+position: fixed;
+top: 16px; right: 16px;
+z-index: 9998;
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: 50px;
+padding: 6px 14px 6px 10px;
+display: flex; align-items: center; gap: 8px;
+cursor: pointer;
+box-shadow: var(–shadow);
+transition: background 0.3s, border-color 0.3s, transform 0.2s;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 12px;
+color: var(–muted);
+user-select: none;
+}
+#theme-toggle:hover { transform: scale(1.05); border-color: var(–accent1); color: var(–accent1); }
+#theme-toggle .toggle-track {
+width: 36px; height: 20px;
+background: var(–toggle-track);
+border-radius: 10px;
+position: relative;
+transition: background 0.3s;
+flex-shrink: 0;
+}
+#theme-toggle .toggle-knob {
+position: absolute;
+width: 14px; height: 14px;
+background: var(–accent1);
+border-radius: 50%;
+top: 3px; left: 3px;
+transition: transform 0.3s, background 0.3s;
+}
+html.light #theme-toggle .toggle-knob { transform: translateX(16px); }
+#toggle-icon { font-size: 15px; transition: transform 0.4s; }
+html.light #toggle-icon { transform: rotate(180deg); }
+
+/* ─── Hero gradient ─── */
+.hero-bg {
+background: radial-gradient(ellipse 80% 60% at 50% 0%, var(–hero-glow1) 0%, transparent 70%),
+radial-gradient(ellipse 60% 40% at 80% 100%, var(–hero-glow2) 0%, transparent 60%),
+var(–bg);
+transition: background 0.4s;
+}
+
+/* ─── Section cards ─── */
+.section-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 16px;
+transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s, background 0.4s;
+cursor: pointer;
+position: relative;
+overflow: hidden;
+}
+.section-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 3px;
+background: var(–card-accent, var(–accent1));
+transform: scaleX(0);
+transform-origin: left;
+transition: transform 0.3s;
+}
+.section-card:hover::before { transform: scaleX(1); }
+.section-card:hover {
+transform: translateY(-4px);
+border-color: var(–card-hover-border);
+box-shadow: var(–shadow);
+}
+
+/* ─── Matrix cell ─── */
+.mcell {
+background: var(–mcell-bg);
+border: 1px solid var(–mcell-border);
+color: var(–mcell-text);
+border-radius: 6px;
+padding: 6px 10px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 13px;
+text-align: center;
+transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.mcell.high { background: rgba(77,240,192,0.18); border-color: rgba(77,240,192,0.4); color: #0d9e7a; font-weight: 600; }
+html:not(.light) .mcell.high { color: #4df0c0; }
+.mcell.med  { background: rgba(77,192,240,0.12); border-color: rgba(77,192,240,0.25); color: #1577a0; }
+html:not(.light) .mcell.med { color: #7dd4f0; }
+
+/* ─── Step box ─── */
+.step-box {
+border-radius: 10px;
+padding: 12px 16px;
+margin-bottom: 8px;
+transition: all 0.4s;
+border: 1px solid transparent;
+}
+
+/* ─── Modal ─── */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(6px);
+z-index: 1000;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 16px;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s;
+}
+html.light .modal-overlay { background: rgba(100,110,150,0.4); }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+background: var(–modal-bg);
+border: 1px solid rgba(77,240,192,0.25);
+border-radius: 20px;
+max-width: 640px;
+width: 100%;
+max-height: 90vh;
+overflow-y: auto;
+transform: translateY(24px) scale(0.97);
+transition: transform 0.35s, background 0.4s;
+position: relative;
+scrollbar-width: thin;
+scrollbar-color: rgba(77,240,192,0.3) transparent;
+box-shadow: var(–shadow);
+}
+html.light .modal-box { border-color: rgba(13,158,122,0.3); }
+.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+
+/* Modal close button */
+.modal-close {
+position: absolute; top: 16px; right: 16px;
+background: var(–mcell-bg);
+border: 1px solid var(–border);
+color: var(–muted);
+width: 32px; height: 32px; border-radius: 50%;
+cursor: pointer; font-size: 16px;
+display: flex; align-items: center; justify-content: center;
+transition: background 0.2s, color 0.2s;
+}
+.modal-close:hover { background: rgba(240,77,77,0.15); color: #e74c3c; border-color: #e74c3c; }
+
+/* ─── YouTube card ─── */
+.yt-card {
+background: var(–res-bg);
+border: 1px solid rgba(200,0,0,0.2);
+border-radius: 12px;
+overflow: hidden;
+transition: border-color 0.3s, transform 0.2s;
+text-decoration: none;
+display: block;
+margin-bottom: 10px;
+}
+.yt-card:hover { border-color: rgba(255,60,60,0.6); transform: translateY(-2px); }
+.yt-thumb {
+background: var(–yt-thumb-bg);
+display: flex; align-items: center; justify-content: center;
+height: 90px;
+font-size: 32px;
+position: relative;
+}
+.yt-play {
+position: absolute;
+width: 44px; height: 44px;
+background: rgba(255,0,0,0.85);
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; color: white;
+}
+.yt-title { font-size: 13px; font-weight: bold; color: var(–text); transition: color 0.3s; }
+.yt-sub   { font-size: 11px; color: var(–muted); margin-top: 3px; transition: color 0.3s; }
+
+/* ─── Resource link ─── */
+.res-link {
+display: flex; align-items: center; gap: 10px;
+background: var(–res-bg);
+border: 1px solid var(–res-border);
+border-radius: 10px; padding: 12px 14px;
+text-decoration: none; color: var(–text);
+transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.3s;
+margin-bottom: 8px;
+}
+.res-link:hover { background: rgba(77,240,192,0.06); border-color: rgba(77,240,192,0.3); transform: translateX(4px); }
+html.light .res-link:hover { background: rgba(13,158,122,0.06); border-color: rgba(13,158,122,0.3); }
+
+/* ─── Quiz ─── */
+.quiz-btn {
+background: var(–quiz-bg);
+border: 1px solid var(–quiz-border);
+border-radius: 8px; padding: 10px 14px;
+text-align: left; cursor: pointer;
+color: var(–text); font-family: ‘Lora’, serif; font-size: 13px;
+transition: all 0.2s; width: 100%; margin-bottom: 6px;
+}
+.quiz-btn:hover { background: rgba(77,240,192,0.08); border-color: rgba(77,240,192,0.35); }
+html.light .quiz-btn:hover { background: rgba(13,158,122,0.08); border-color: rgba(13,158,122,0.35); }
+.quiz-btn.correct { background: rgba(46,204,113,0.15); border-color: #2ecc71; color: #1a7a3a; }
+html:not(.light) .quiz-btn.correct { color: #2ecc71; }
+.quiz-btn.wrong   { background: rgba(231,76,60,0.15); border-color: #e74c3c; }
+
+/* ─── Progress bar ─── */
+#progress-bar {
+position: fixed; top: 0; left: 0; height: 3px;
+background: linear-gradient(90deg, var(–accent1), var(–accent3));
+z-index: 9999; width: 0%; transition: width 0.2s;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(77,240,192,0.25); border-radius: 3px; }
+html.light ::-webkit-scrollbar-thumb { background: rgba(13,158,122,0.25); }
+
+/* ─── Animations ─── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+@keyframes float  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+@keyframes spin   { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.fade-up { animation: fadeUp 0.5s ease both; }
+.float   { animation: float 3s ease-in-out infinite; }
+
+.tag {
+display: inline-block; padding: 2px 10px;
+border-radius: 20px; font-size: 11px; font-family: ‘IBM Plex Mono’, monospace;
+letter-spacing: 0.05em;
+transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* ─── Light mode inline style overrides ─── */
+html.light .lm-text    { color: var(–text)  !important; }
+html.light .lm-text2   { color: var(–text2) !important; }
+html.light .lm-muted   { color: var(–muted) !important; }
+html.light .lm-muted2  { color: var(–muted2) !important; }
+html.light .lm-surface { background: var(–surface) !important; }
+html.light .lm-surface2{ background: var(–surface2) !important; }
+html.light .lm-border  { border-color: var(–border) !important; }
+html.light .lm-code    { background: var(–code-bg) !important; }
+
+/* Light mode: inline colour overrides for hardcoded dark colours */
+html.light [data-lc] { color: attr(data-lc) !important; }
+/* ─── Light mode: recolour hardcoded inline dark colours ─── */
+html.light .hero-bg h1 { color: var(–text) !important; }
+
+/* Cards internal text */
+html.light .section-card p,
+html.light .section-card div { color: inherit; }
+
+/* Modal header backgrounds */
+html.light .modal-box [style*=“background:linear-gradient”] {
+filter: brightness(2.8) saturate(0.7);
+}
+
+/* Inside modal: dim text overrides */
+html.light .modal-box p,
+html.light .modal-box li { color: var(–text2); }
+
+/* Code blocks */
+html.light pre, html.light .code-block {
+background: var(–code-bg) !important;
+color: #1a2a4a !important;
+}
+
+/* Matrix cells in light mode */
+html.light .mcell:not(.high):not(.med) {
+color: #2a2c40 !important;
+background: rgba(0,0,0,0.04) !important;
+border-color: rgba(0,0,0,0.1) !important;
+}
+
+/* Intro section box */
+html.light #intro-box {
+background: var(–surface) !important;
+border-color: rgba(13,158,122,0.2) !important;
+}
+
+/* Lesson header accent boxes */
+html.light .lesson-header {
+filter: brightness(1.1);
+}
+
+/* ── Light mode: code block syntax colours ── */
+html.light .modal-box [style*=“var(–code-bg)”] {
+color: #1a2040 !important;
+}
+html.light .modal-box [style*=“var(–code-bg)”] [style*=“color:var(–accent1)”],
+html.light .modal-box [style*=“var(–code-bg)”] [style*=“color:var(–accent2)”] {
+color: #0a6e52 !important;
+}
+
+/* ── Light mode: force visible text in all inline-styled divs ── */
+html.light .modal-box > div > div { color: var(–text2); }
+
+/* ── Light mode: panel/surface overrides ── */
+html.light [style*=“background:rgba(255,255,255,0.03)”],
+html.light [style*=“background:rgba(255,255,255,0.04)”],
+html.light [style*=“background:rgba(255,255,255,0.02)”] {
+background: var(–surface2) !important;
+}
+html.light [style*=“background:rgba(255,255,255,0.06)”],
+html.light [style*=“background:rgba(255,255,255,0.05)”] {
+background: rgba(0,0,0,0.04) !important;
+}
+
+/* ── Light mode: tag pills ── */
+html.light [style*=“background:rgba(255,255,255,0.05)”] {
+background: rgba(0,0,0,0.06) !important;
+color: var(–muted) !important;
+}
+
+/* ── Light mode: training weight boxes ── */
+html.light #train-display {
+background: var(–surface) !important;
+border-color: var(–border) !important;
+}
+html.light #train-display > div {
+background: rgba(0,0,0,0.04) !important;
+border-color: var(–border) !important;
+}
+
+/* ── Light mode: section card inner elements ── */
+html.light .section-card [style*=“color:var(–muted)”],
+html.light .section-card p { color: var(–muted) !important; }
+
+/* ── Light mode: hero text ── */
+html.light .hero-bg p { color: var(–muted) !important; }
+html.light .hero-bg .tag[style*=“background:rgba(77,240,192”] { background: rgba(13,158,122,0.12) !important; }
+html.light .hero-bg .tag[style*=“background:rgba(240,180,77”] { background: rgba(196,125,0,0.12) !important; }
+html.light .hero-bg .tag[style*=“background:rgba(180,77,240”] { background: rgba(124,34,212,0.1) !important; }
+
+/* ── Light mode: modal header gradient regions ── */
+html.light .modal-box > div:first-child {
+background: linear-gradient(135deg, rgba(13,158,122,0.1), rgba(13,158,122,0.03)) !important;
+border-bottom-color: rgba(13,158,122,0.2) !important;
+}
+
+/* ── Light mode: scale bars container ── */
+html.light #scale-bars [style*=“background:rgba(255,255,255,0.06)”] {
+background: rgba(0,0,0,0.07) !important;
+}
+
+/* ── Light mode: step boxes ── */
+html.light .step-box { color: var(–text) !important; }
+
+/* ── Light mode: mini matrix preview ── */
+html.light table [style*=“color:var(–muted2)”] { color: var(–muted2) !important; }
+html.light table [style*=“color:var(–text)”]   { color: var(–text) !important; }
+</style>
+
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- ═══════ THEME TOGGLE ═══════ -->
+
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle theme">
+  <span id="toggle-icon">🌙</span>
+  <div class="toggle-track"><div class="toggle-knob"></div></div>
+  <span id="toggle-label">Dark</span>
+</button>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+
+<header class="hero-bg relative z-10 px-6 pt-16 pb-12 text-center">
+  <div class="fade-up" style="animation-delay:0.1s">
+    <span class="tag" style="background:rgba(77,240,192,0.12);color:var(--accent1);border:1px solid rgba(77,240,192,0.3)">🎓 Middle School AI Guide</span>
+  </div>
+  <h1 class="fade-up text-4xl md:text-5xl font-black mt-4 mb-3 leading-tight" style="animation-delay:0.2s">
+    Matrix Math<br/><span style="color:var(--accent1)">→ Artificial Intelligence</span>
+  </h1>
+  <p class="fade-up text-lg max-w-xl mx-auto mb-8" style="color:var(--muted);animation-delay:0.3s;font-style:italic">
+    From multiplying numbers in a table to powering ChatGPT — step by step, for everyone.
+  </p>
+  <div class="fade-up flex flex-wrap justify-center gap-3" style="animation-delay:0.4s">
+    <div class="tag" style="background:rgba(240,180,77,0.1);color:var(--accent2);border:1px solid rgba(240,180,77,0.3)">🍎 Fruit Examples</div>
+    <div class="tag" style="background:rgba(180,77,240,0.1);color:var(--accent3);border:1px solid rgba(180,77,240,0.3)">🧮 Step-by-Step Math</div>
+    <div class="tag" style="background:rgba(77,240,192,0.1);color:var(--accent1);border:1px solid rgba(77,240,192,0.3)">🧠 How AI Learns</div>
+  </div>
+
+  <!-- floating fruit emojis -->
+
+  <div class="absolute left-8 top-12 text-4xl float" style="animation-delay:0s;opacity:0.3">🍎</div>
+  <div class="absolute right-10 top-16 text-3xl float" style="animation-delay:0.7s;opacity:0.25">🥦</div>
+  <div class="absolute left-16 bottom-8 text-3xl float" style="animation-delay:1.4s;opacity:0.2">🍌</div>
+  <div class="absolute right-8 bottom-6 text-4xl float" style="animation-delay:0.4s;opacity:0.2">🧮</div>
+</header>
+
+<!-- ═══════════════════ INTRO EXPLAINER ═══════════════════ -->
+
+<section class="relative z-10 max-w-3xl mx-auto px-6 mb-14">
+  <div id="intro-box" style="background:var(--surface);border:1px solid rgba(77,240,192,0.15);border-radius:16px;padding:24px">
+    <h2 class="text-xl font-bold mb-3" style="color:var(--accent1)">🤔 Why Should You Care About Matrices?</h2>
+    <p class="text-sm mb-3" style="color:var(--text2);line-height:1.8">
+      Every time you ask ChatGPT a question, use a recommendation app, or get a food suggestion — 
+      <strong style="color:var(--text)">matrix multiplication is happening behind the scenes.</strong> 
+      It's the engine of all modern AI. The good news? It's really just multiplying numbers in a table!
+    </p>
+    <div class="grid grid-cols-3 gap-3 mt-4">
+      <div style="background:var(--mcell-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">🍎</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace">Our Example</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">12 fruits × 8 nutrients</div>
+      </div>
+      <div style="background:var(--mcell-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">📷</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace">Image AI</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">1M pixels × weights</div>
+      </div>
+      <div style="background:var(--mcell-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">🤖</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace">ChatGPT</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">175B weights!</div>
+      </div>
+    </div>
+    <p class="text-sm mt-4" style="color:var(--muted);font-style:italic">
+      Same math. Different scale. Click any section below to go deeper 👇
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ SECTIONS GRID ═══════════════════ -->
+
+<section class="relative z-10 max-w-3xl mx-auto px-6 mb-16">
+  <h2 class="text-2xl font-black mb-6 text-center" style="letter-spacing:-0.5px">
+    📚 Lessons — Click to Explore
+  </h2>
+
+  <div class="grid grid-cols-1 gap-5" id="lessons-grid">
+
+```
+<!-- LESSON 1 -->
+<div class="section-card p-6" style="--card-accent:#4df0c0" onclick="openModal('m1')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">🍎</span>
+        <div>
+          <span class="tag" style="background:rgba(77,240,192,0.1);color:var(--accent1);border:1px solid rgba(77,240,192,0.2)">Lesson 1</span>
+          <h3 class="text-lg font-bold mt-1">What IS a Matrix?</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        A matrix is just a <strong style="color:var(--text)">table of numbers</strong> — like a spreadsheet. 
+        We store fruit nutrition data in rows and columns. Every AI starts here.
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Rows & Columns</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">3×3 Matrix</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Data Storage</span>
+      </div>
+    </div>
+    <div style="color:var(--accent1);font-size:20px;opacity:0.6">→</div>
+  </div>
+
+  <!-- Live mini matrix preview -->
+  <div class="mt-4 overflow-x-auto">
+    <table style="border-collapse:separate;border-spacing:4px;font-size:12px;font-family:'IBM Plex Mono',monospace">
+      <tr>
+        <td style="color:var(--muted2);padding:4px 6px"></td>
+        <td style="color:var(--accent1);padding:4px 8px;text-align:center">Vit C</td>
+        <td style="color:var(--accent1);padding:4px 8px;text-align:center">Potas.</td>
+        <td style="color:var(--accent1);padding:4px 8px;text-align:center">Fiber</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text2);padding:4px 6px;white-space:nowrap">🍎 Apple</td>
+        <td class="mcell med">0.6</td><td class="mcell">0.3</td><td class="mcell med">0.5</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text2);padding:4px 6px;white-space:nowrap">🍌 Banana</td>
+        <td class="mcell">0.3</td><td class="mcell high">0.9</td><td class="mcell med">0.6</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text2);padding:4px 6px;white-space:nowrap">🍊 Orange</td>
+        <td class="mcell high">1.0</td><td class="mcell">0.4</td><td class="mcell med">0.5</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- LESSON 2 -->
+<div class="section-card p-6" style="--card-accent:#b44df0" onclick="openModal('m2')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">⚖️</span>
+        <div>
+          <span class="tag" style="background:rgba(180,77,240,0.1);color:var(--accent3);border:1px solid rgba(180,77,240,0.2)">Lesson 2</span>
+          <h3 class="text-lg font-bold mt-1">Weight Vectors</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        Not all nutrients are equal for every health goal. <strong style="color:var(--text)">Weights</strong> tell the AI 
+        which numbers matter most. For immunity, Vitamin C gets a weight of 1.0!
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Weight Vector</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Importance Scores</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Goal Tuning</span>
+      </div>
+    </div>
+    <div style="color:var(--accent3);font-size:20px;opacity:0.6">→</div>
+  </div>
+  <div class="mt-4 flex gap-3 flex-wrap">
+    <div style="background:rgba(180,77,240,0.12);border:1px solid rgba(180,77,240,0.3);border-radius:10px;padding:10px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px">
+      <div style="color:var(--muted);font-size:10px;margin-bottom:4px">🛡️ Immunity Weights</div>
+      <div style="color:var(--accent1)">VitC <strong>1.0</strong></div>
+      <div style="color:var(--text2)">Potas. 0.3</div>
+      <div style="color:var(--text2)">Fiber 0.2</div>
+    </div>
+    <div style="background:rgba(240,180,77,0.08);border:1px solid rgba(240,180,77,0.25);border-radius:10px;padding:10px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px">
+      <div style="color:var(--muted);font-size:10px;margin-bottom:4px">❤️ Heart Weights</div>
+      <div style="color:var(--accent2)">Potas. <strong>1.0</strong></div>
+      <div style="color:var(--text2)">Fiber 0.9</div>
+      <div style="color:var(--text2)">VitC 0.5</div>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON 3 -->
+<div class="section-card p-6" style="--card-accent:#f0b44d" onclick="openModal('m3')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">✖️</span>
+        <div>
+          <span class="tag" style="background:rgba(240,180,77,0.1);color:var(--accent2);border:1px solid rgba(240,180,77,0.2)">Lesson 3</span>
+          <h3 class="text-lg font-bold mt-1">The Dot Product — Step by Step</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        <strong style="color:var(--text)">Multiply each pair, then add them all up.</strong> 
+        That's the dot product — the single most important operation in all of AI. 
+        Watch Apple's immunity score get calculated live!
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Dot Product</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Multiply & Add</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Scalar Score</span>
+      </div>
+    </div>
+    <div style="color:var(--accent2);font-size:20px;opacity:0.6">→</div>
+  </div>
+  <div class="mt-4 font-mono text-sm" style="background:rgba(240,180,77,0.05);border:1px solid rgba(240,180,77,0.15);border-radius:10px;padding:12px">
+    <div style="color:var(--muted);font-size:11px;margin-bottom:6px">Apple × Immunity =</div>
+    <div><span style="color:#e74c3c">0.6 × 1.0</span> + <span style="color:#3498db">0.3 × 0.3</span> + <span style="color:#2ecc71">0.5 × 0.2</span></div>
+    <div style="margin-top:4px"><span style="color:#e74c3c">0.60</span> + <span style="color:#3498db">0.09</span> + <span style="color:#2ecc71">0.10</span> = <strong style="color:var(--accent2);font-size:16px">0.79</strong> 🏆</div>
+  </div>
+</div>
+
+<!-- LESSON 4 -->
+<div class="section-card p-6" style="--card-accent:#4df0c0" onclick="openModal('m4')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">📊</span>
+        <div>
+          <span class="tag" style="background:rgba(77,240,192,0.1);color:var(--accent1);border:1px solid rgba(77,240,192,0.2)">Lesson 4</span>
+          <h3 class="text-lg font-bold mt-1">Matrix × Matrix = All Scores at Once</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        Instead of one fruit at a time, we score <strong style="color:var(--text)">all 12 foods simultaneously</strong> 
+        with one matrix multiplication. This is why AI is fast — batch processing!
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Matrix Multiply</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Batch Processing</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">GPU Power</span>
+      </div>
+    </div>
+    <div style="color:var(--accent1);font-size:20px;opacity:0.6">→</div>
+  </div>
+  <div class="mt-4 flex items-center gap-2 text-sm font-mono overflow-x-auto">
+    <div style="background:rgba(77,240,192,0.06);border:1px solid rgba(77,240,192,0.15);border-radius:8px;padding:8px 12px;white-space:nowrap">
+      Fruits<br/><span style="color:var(--accent1)">[12 × 8]</span>
+    </div>
+    <span style="color:var(--muted2);font-size:18px">×</span>
+    <div style="background:rgba(180,77,240,0.06);border:1px solid rgba(180,77,240,0.15);border-radius:8px;padding:8px 12px;white-space:nowrap">
+      Weights<br/><span style="color:var(--accent3)">[8 × 1]</span>
+    </div>
+    <span style="color:var(--muted2);font-size:18px">=</span>
+    <div style="background:rgba(240,180,77,0.06);border:1px solid rgba(240,180,77,0.15);border-radius:8px;padding:8px 12px;white-space:nowrap">
+      Scores<br/><span style="color:var(--accent2)">[12 × 1]</span>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON 5 -->
+<div class="section-card p-6" style="--card-accent:#f04d4d" onclick="openModal('m5')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">🧠</span>
+        <div>
+          <span class="tag" style="background:rgba(240,77,77,0.1);color:#f04d4d;border:1px solid rgba(240,77,77,0.2)">Lesson 5</span>
+          <h3 class="text-lg font-bold mt-1">How AI Actually Learns</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        The AI starts with <strong style="color:var(--text)">random weights</strong>, makes predictions, checks if it was wrong, 
+        and adjusts. Repeat millions of times — that's <em style="color:#f04d4d">training!</em>
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Training</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Backpropagation</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Gradient Descent</span>
+      </div>
+    </div>
+    <div style="color:#f04d4d;font-size:20px;opacity:0.6">→</div>
+  </div>
+  <div class="mt-4 flex gap-1 items-center text-xs font-mono overflow-x-auto" style="padding-bottom:4px">
+    <div style="background:var(--quiz-bg);border-radius:6px;padding:6px 10px;text-align:center;white-space:nowrap">
+      <div style="color:var(--muted2)">Start</div>
+      <div style="color:var(--text)">🎲 Random</div>
+    </div>
+    <span style="color:var(--muted2)">→</span>
+    <div style="background:var(--quiz-bg);border-radius:6px;padding:6px 10px;text-align:center;white-space:nowrap">
+      <div style="color:var(--muted2)">Predict</div>
+      <div style="color:var(--text)">📊 Score</div>
+    </div>
+    <span style="color:var(--muted2)">→</span>
+    <div style="background:var(--quiz-bg);border-radius:6px;padding:6px 10px;text-align:center;white-space:nowrap">
+      <div style="color:var(--muted2)">Check</div>
+      <div style="color:var(--text)">❌ Error</div>
+    </div>
+    <span style="color:var(--muted2)">→</span>
+    <div style="background:rgba(240,77,77,0.12);border:1px solid rgba(240,77,77,0.3);border-radius:6px;padding:6px 10px;text-align:center;white-space:nowrap">
+      <div style="color:var(--muted2)">Adjust</div>
+      <div style="color:#f04d4d">🔧 Weights</div>
+    </div>
+    <span style="color:var(--muted2)">→</span>
+    <div style="background:rgba(77,240,192,0.08);border:1px solid rgba(77,240,192,0.2);border-radius:6px;padding:6px 10px;text-align:center;white-space:nowrap">
+      <div style="color:var(--muted2)">Done!</div>
+      <div style="color:var(--accent1)">✅ Smart</div>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON 6 -->
+<div class="section-card p-6" style="--card-accent:#4d9ef0" onclick="openModal('m6')">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span style="font-size:32px">🚀</span>
+        <div>
+          <span class="tag" style="background:rgba(77,158,240,0.1);color:#4d9ef0;border:1px solid rgba(77,158,240,0.2)">Lesson 6</span>
+          <h3 class="text-lg font-bold mt-1">From Fruits to ChatGPT</h3>
+        </div>
+      </div>
+      <p class="text-sm" style="color:var(--muted);line-height:1.7">
+        Same math. <strong style="color:var(--text)">Bigger scale.</strong> ChatGPT uses the exact same matrix multiplication 
+        you just learned — just with 175 billion weights instead of 48!
+      </p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Neural Networks</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">Transformers</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)">LLMs</span>
+      </div>
+    </div>
+    <div style="color:#4d9ef0;font-size:20px;opacity:0.6">→</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- MODAL 1 — What is a Matrix -->
+
+<div class="modal-overlay" id="m1">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(77,240,192,0.15),rgba(77,240,192,0.04));padding:24px;border-bottom:1px solid rgba(77,240,192,0.15)">
+    <button onclick="closeModal('m1')" class="modal-close">✕</button>
+      <span style="font-size:36px">🍎</span>
+      <h2 class="text-2xl font-black mt-2" style="color:var(--accent1)">What IS a Matrix?</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">The building block of all AI — it's just a table!</p>
+    </div>
+    <div style="padding:24px">
+
+```
+  <h3 class="text-base font-bold mb-2">📖 The Simple Explanation</h3>
+  <p class="text-sm mb-4" style="color:var(--text2);line-height:1.8">
+    Imagine a simple chart in your notebook. Rows are fruits. Columns are nutrients. 
+    Each box has a number from 0 to 1 showing how much of that nutrient the fruit has. 
+    <strong style="color:var(--text)">That chart IS a matrix.</strong> Mathematicians just gave it a fancy name!
+  </p>
+
+  <div style="background:var(--res-bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;overflow-x:auto">
+    <div style="font-size:11px;color:var(--accent1);font-family:'IBM Plex Mono',monospace;margin-bottom:10px;letter-spacing:2px">FRUIT NUTRITION MATRIX [3 rows × 3 columns]</div>
+    <table style="border-collapse:separate;border-spacing:5px;width:100%;font-size:13px">
+      <tr>
+        <td style="padding:4px;color:var(--muted2)"></td>
+        <td style="color:var(--accent1);font-family:'IBM Plex Mono',monospace;padding:4px 8px;text-align:center">Vit C</td>
+        <td style="color:var(--accent1);font-family:'IBM Plex Mono',monospace;padding:4px 8px;text-align:center">Potassium</td>
+        <td style="color:var(--accent1);font-family:'IBM Plex Mono',monospace;padding:4px 8px;text-align:center">Fiber</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text);padding:4px;white-space:nowrap">🍎 Apple</td>
+        <td class="mcell med">0.6</td><td class="mcell">0.3</td><td class="mcell med">0.5</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text);padding:4px;white-space:nowrap">🍌 Banana</td>
+        <td class="mcell">0.3</td><td class="mcell high">0.9</td><td class="mcell med">0.6</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text);padding:4px;white-space:nowrap">🍊 Orange</td>
+        <td class="mcell high">1.0</td><td class="mcell">0.4</td><td class="mcell med">0.5</td>
+      </tr>
+    </table>
+    <p style="font-size:11px;color:var(--muted2);margin-top:10px;font-style:italic">🟢 Green = high value (good for that nutrient!)</p>
+  </div>
+
+  <h3 class="text-base font-bold mb-2">🔢 How Mathematicians Write It</h3>
+  <div style="background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-bottom:20px;overflow-x:auto">
+    <div style="color:var(--muted);margin-bottom:6px">// A = our 3×3 matrix</div>
+    <div style="color:var(--accent1)">A = [ [0.6, 0.3, 0.5],</div>
+    <div style="color:var(--accent1)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[0.3, 0.9, 0.6],</div>
+    <div style="color:var(--accent1)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.0, 0.4, 0.5] ]</div>
+    <div style="color:var(--muted2);margin-top:8px">// A[1][0] = 0.9 (Banana's Potassium)</div>
+    <div style="color:var(--muted2)">// A[2][0] = 1.0 (Orange's Vitamin C — the BEST!)</div>
+  </div>
+
+  <!-- Quiz -->
+  <div style="background:rgba(77,240,192,0.05);border:1px solid rgba(77,240,192,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--accent1);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🧪 Quick Check</div>
+    <p class="text-sm mb-3" style="color:var(--text)">How much Potassium does a Banana have in this matrix?</p>
+    <div id="q1-answers">
+      <button class="quiz-btn" onclick="checkQuiz('q1',this,false)">0.3</button>
+      <button class="quiz-btn" onclick="checkQuiz('q1',this,true)">0.9</button>
+      <button class="quiz-btn" onclick="checkQuiz('q1',this,false)">0.6</button>
+      <button class="quiz-btn" onclick="checkQuiz('q1',this,false)">1.0</button>
+    </div>
+    <p id="q1-hint" style="font-size:12px;color:var(--muted2);font-style:italic;margin-top:8px;display:none">💡 Find the Banana row, then look at the Potassium column!</p>
+  </div>
+
+  <!-- YouTube videos -->
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <a class="yt-card" href="https://www.youtube.com/watch?v=xyAuNHPsq-g" target="_blank">
+      <div class="yt-thumb">🎓<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Introduction to Matrices — Khan Academy</div>
+        <div class="yt-sub">Khan Academy · Perfect for beginners · 8 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=Fg7_mv3izR0" target="_blank">
+      <div class="yt-thumb" style="font-size:28px">🧮<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">What is a Matrix? (Visual Explanation)</div>
+        <div class="yt-sub">3Blue1Brown · Visual & intuitive · 15 min</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Deep links -->
+  <h3 class="text-base font-bold mb-3">📚 Go Deeper</h3>
+  <a class="res-link" href="https://www.khanacademy.org/math/precalculus/x9e81a4f98389efdf:matrices" target="_blank">
+    <span style="font-size:22px">📘</span>
+    <div><div style="font-size:13px;font-weight:bold">Khan Academy — Matrices Course</div><div style="font-size:11px;color:var(--muted)">Free interactive lessons, practice problems, videos</div></div>
+    <span style="color:var(--accent1);margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://mathworld.wolfram.com/Matrix.html" target="_blank">
+    <span style="font-size:22px">🔬</span>
+    <div><div style="font-size:13px;font-weight:bold">Wolfram MathWorld — Matrix</div><div style="font-size:11px;color:var(--muted)">Deep technical reference with examples</div></div>
+    <span style="color:var(--accent1);margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://numpy.org/doc/stable/user/quickstart.html" target="_blank">
+    <span style="font-size:22px">🐍</span>
+    <div><div style="font-size:13px;font-weight:bold">NumPy Quickstart — Matrices in Python</div><div style="font-size:11px;color:var(--muted)">Try it in real code — the tool AI engineers use</div></div>
+    <span style="color:var(--accent1);margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- MODAL 2 — Weight Vectors -->
+
+<div class="modal-overlay" id="m2">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(180,77,240,0.15),rgba(180,77,240,0.04));padding:24px;border-bottom:1px solid rgba(180,77,240,0.15)">
+    <button onclick="closeModal('m2')" class="modal-close">✕</button>
+      <span style="font-size:36px">⚖️</span>
+      <h2 class="text-2xl font-black mt-2" style="color:var(--accent3)">Weight Vectors</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Telling the AI what matters most</p>
+    </div>
+    <div style="padding:24px">
+      <p class="text-sm mb-4" style="color:var(--text2);line-height:1.8">
+        A <strong style="color:var(--accent3)">weight vector</strong> is a list of importance scores — one per nutrient. 
+        For immunity, Vitamin C is most critical (weight = 1.0). For bone health, Calcium is king (weight = 1.0). 
+        The AI learns these weights automatically from data!
+      </p>
+
+```
+  <div class="grid grid-cols-2 gap-3 mb-6">
+    <div style="background:rgba(180,77,240,0.08);border:1px solid rgba(180,77,240,0.25);border-radius:12px;padding:14px">
+      <div style="font-size:12px;color:var(--accent3);margin-bottom:8px">🛡️ Immunity</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">VitC:</span> <span style="color:var(--text)">1.0 ████</span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--muted)">Potas:</span> 0.3 █</div>
+        <div><span style="color:var(--muted)">Fiber:</span> 0.2 ▌</div>
+      </div>
+    </div>
+    <div style="background:rgba(240,77,77,0.08);border:1px solid rgba(240,77,77,0.25);border-radius:12px;padding:14px">
+      <div style="font-size:12px;color:#f04d4d;margin-bottom:8px">🦴 Bone Health</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">Calc:</span> <span style="color:var(--text)">1.0 ████</span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">VitK:</span> <span style="color:var(--text)">0.9 ███▌</span></div>
+        <div><span style="color:var(--muted)">VitD:</span> 0.8 ███</div>
+      </div>
+    </div>
+    <div style="background:rgba(240,180,77,0.08);border:1px solid rgba(240,180,77,0.25);border-radius:12px;padding:14px">
+      <div style="font-size:12px;color:var(--accent2);margin-bottom:8px">❤️ Heart Health</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">Potas:</span> <span style="color:var(--text)">1.0 ████</span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">Fiber:</span> <span style="color:var(--text)">0.9 ███▌</span></div>
+        <div><span style="color:var(--muted)">VitC:</span> 0.5 ██</div>
+      </div>
+    </div>
+    <div style="background:rgba(77,158,240,0.08);border:1px solid rgba(77,158,240,0.25);border-radius:12px;padding:14px">
+      <div style="font-size:12px;color:#4d9ef0;margin-bottom:8px">⚡ Energy</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">Iron:</span> <span style="color:var(--text)">1.0 ████</span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--accent1)">Potas:</span> <span style="color:var(--text)">0.8 ███</span></div>
+        <div><span style="color:var(--muted)">Folate:</span> 0.7 ██▌</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--res-bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--accent3);margin-bottom:8px">🧠 KEY INSIGHT</div>
+    <p class="text-sm" style="color:var(--text2);line-height:1.7">
+      When you <em>train</em> a neural network, it's literally finding the best weight values. 
+      The model starts with random weights (like 0.5, 0.5, 0.5) and adjusts them thousands of times 
+      until the scores it gives actually match reality. <strong style="color:var(--text)">Your brain does this too</strong> — 
+      learning what "matters" in a situation is the same idea!
+    </p>
+  </div>
+
+  <!-- Quiz -->
+  <div style="background:rgba(180,77,240,0.05);border:1px solid rgba(180,77,240,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🧪 Quick Check</div>
+    <p class="text-sm mb-3" style="color:var(--text)">For Heart Health, which nutrient has the HIGHEST weight?</p>
+    <div id="q2-answers">
+      <button class="quiz-btn" onclick="checkQuiz('q2',this,false)">Vitamin C (0.5)</button>
+      <button class="quiz-btn" onclick="checkQuiz('q2',this,true)">Potassium (1.0)</button>
+      <button class="quiz-btn" onclick="checkQuiz('q2',this,false)">Fiber (0.9)</button>
+      <button class="quiz-btn" onclick="checkQuiz('q2',this,false)">Iron (0.3)</button>
+    </div>
+    <p id="q2-hint" style="font-size:12px;color:var(--muted2);font-style:italic;margin-top:8px;display:none">💡 The highest weight number = most important for that goal!</p>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <a class="yt-card" href="https://www.youtube.com/watch?v=aircAruvnKk" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">🧬<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">But what IS a Neural Network? — 3Blue1Brown</div>
+        <div class="yt-sub">The best visual intro to weights and neurons · 19 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=IHZwWFHWa-w" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">📉<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Gradient Descent — How Neural Nets Learn</div>
+        <div class="yt-sub">3Blue1Brown · How weights get adjusted · 21 min</div>
+      </div>
+    </a>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">📚 Go Deeper</h3>
+  <a class="res-link" href="https://playground.tensorflow.org/" target="_blank">
+    <span style="font-size:22px">🎮</span>
+    <div><div style="font-size:13px;font-weight:bold">TensorFlow Playground</div><div style="font-size:11px;color:var(--muted)">Drag sliders to change weights — see the AI react in real time!</div></div>
+    <span style="color:var(--accent3);margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">
+    <span style="font-size:22px">🔵</span>
+    <div><div style="font-size:13px;font-weight:bold">3Blue1Brown — Neural Networks Series</div><div style="font-size:11px;color:var(--muted)">Best visual math explanations on the internet</div></div>
+    <span style="color:var(--accent3);margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- MODAL 3 — Dot Product -->
+
+<div class="modal-overlay" id="m3">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(240,180,77,0.15),rgba(240,180,77,0.04));padding:24px;border-bottom:1px solid rgba(240,180,77,0.15)">
+    <button onclick="closeModal('m3')" class="modal-close">✕</button>
+      <span style="font-size:36px">✖️</span>
+      <h2 class="text-2xl font-black mt-2" style="color:var(--accent2)">The Dot Product</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Multiply each pair, then add everything up</p>
+    </div>
+    <div style="padding:24px">
+      <p class="text-sm mb-5" style="color:var(--text2);line-height:1.8">
+        The dot product is just <strong style="color:var(--accent2)">multiply matching pairs, then add</strong>. 
+        Let's calculate Apple's Immunity score together, step by step:
+      </p>
+
+```
+  <!-- Interactive step reveal -->
+  <div id="steps-container">
+    <div class="step-box" id="step0" style="background:rgba(231,76,60,0.1);border-color:rgba(231,76,60,0.3)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Step 1 of 3 · Vitamin C</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:15px">
+        Apple's VitC <span style="color:#e74c3c">0.6</span> × Immunity Weight <span style="color:#e74c3c">1.0</span> = <strong style="color:#e74c3c;font-size:18px">0.60</strong>
+      </div>
+    </div>
+    <div class="step-box" id="step1" style="background:rgba(52,152,219,0.1);border-color:rgba(52,152,219,0.3);opacity:0.3">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Step 2 of 3 · Potassium</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:15px">
+        Apple's Potas <span style="color:#3498db">0.3</span> × Weight <span style="color:#3498db">0.3</span> = <strong style="color:#3498db;font-size:18px">0.09</strong>
+      </div>
+    </div>
+    <div class="step-box" id="step2" style="background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.3);opacity:0.3">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Step 3 of 3 · Fiber</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:15px">
+        Apple's Fiber <span style="color:#2ecc71">0.5</span> × Weight <span style="color:#2ecc71">0.2</span> = <strong style="color:#2ecc71;font-size:18px">0.10</strong>
+      </div>
+    </div>
+    <div class="step-box" id="step3" style="background:rgba(240,180,77,0.12);border-color:rgba(240,180,77,0.4);opacity:0.3">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Final Step · Add them ALL up!</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:15px">
+        <span style="color:#e74c3c">0.60</span> + <span style="color:#3498db">0.09</span> + <span style="color:#2ecc71">0.10</span> = <strong style="color:var(--accent2);font-size:22px">0.79</strong> 🏆
+      </div>
+      <div style="font-size:12px;color:var(--accent2);margin-top:6px">Apple's Immunity Score = 0.79 / 1.0 — Pretty good!</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:12px;margin-bottom:20px">
+    <button id="step-btn" onclick="advanceStep()" style="flex:2;background:rgba(240,180,77,0.15);border:1px solid rgba(240,180,77,0.4);border-radius:10px;padding:12px;cursor:pointer;color:var(--accent2);font-family:'Syne',sans-serif;font-weight:bold;font-size:14px">
+      Reveal Next Step →
+    </button>
+    <button onclick="resetSteps()" style="flex:1;background:var(--quiz-bg);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer;color:var(--muted2);font-family:'Syne',sans-serif;font-size:13px">
+      Reset
+    </button>
+  </div>
+
+  <div style="background:var(--res-bg);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--accent2);margin-bottom:6px">🧠 Why This Matters</div>
+    <p class="text-sm" style="color:var(--text2);line-height:1.7">
+      The dot product is the most used math operation in all of AI. Every single neuron in 
+      ChatGPT computes a dot product. A simple forward pass through GPT-4 does 
+      <strong style="color:var(--text)">trillions of dot products</strong> — your response arrives in seconds thanks to GPU chips 
+      that can do billions per second.
+    </p>
+  </div>
+
+  <!-- Quiz -->
+  <div style="background:rgba(240,180,77,0.05);border:1px solid rgba(240,180,77,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🧪 Quick Check</div>
+    <p class="text-sm mb-3" style="color:var(--text)">If Apple's VitC=0.8 and the Immunity weight for VitC=1.0, what is that step's result?</p>
+    <div id="q3-answers">
+      <button class="quiz-btn" onclick="checkQuiz('q3',this,false)">1.8</button>
+      <button class="quiz-btn" onclick="checkQuiz('q3',this,true)">0.8</button>
+      <button class="quiz-btn" onclick="checkQuiz('q3',this,false)">0.0</button>
+      <button class="quiz-btn" onclick="checkQuiz('q3',this,false)">0.08</button>
+    </div>
+    <p id="q3-hint" style="font-size:12px;color:var(--muted2);font-style:italic;margin-top:8px;display:none">💡 0.8 × 1.0 = ? (Multiplying by 1.0 doesn't change a number!)</p>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <a class="yt-card" href="https://www.youtube.com/watch?v=LyGKycYT2v0" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">✖️<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Matrix Multiplication — The Art of Problem Solving</div>
+        <div class="yt-sub">Clear step-by-step walk through · 10 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=XkY2DOUCWMU" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">🎯<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Dot Products and Duality — 3Blue1Brown</div>
+        <div class="yt-sub">Beautiful visual explanation of WHY dot products work · 14 min</div>
+      </div>
+    </a>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">📚 Go Deeper</h3>
+  <a class="res-link" href="https://www.khanacademy.org/math/linear-algebra/vectors-and-spaces/dot-cross-products/v/vector-dot-product-and-vector-length" target="_blank">
+    <span style="font-size:22px">📐</span>
+    <div><div style="font-size:13px;font-weight:bold">Khan Academy — Dot Products</div><div style="font-size:11px;color:var(--muted)">Practice with real problems and instant feedback</div></div>
+    <span style="color:var(--accent2);margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://colab.research.google.com/github/google/eng-edu/raw/main/ml/cc/exercises/numpy_ultraquick_tutorial.ipynb" target="_blank">
+    <span style="font-size:22px">🔬</span>
+    <div><div style="font-size:13px;font-weight:bold">Google Colab — NumPy Dot Products</div><div style="font-size:11px;color:var(--muted)">Try it in Python right in your browser — no install needed</div></div>
+    <span style="color:var(--accent2);margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- MODAL 4 — Matrix Multiply -->
+
+<div class="modal-overlay" id="m4">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(77,240,192,0.15),rgba(77,240,192,0.04));padding:24px;border-bottom:1px solid rgba(77,240,192,0.15)">
+    <button onclick="closeModal('m4')" class="modal-close">✕</button>
+      <span style="font-size:36px">📊</span>
+      <h2 class="text-2xl font-black mt-2" style="color:var(--accent1)">Matrix × Matrix</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Score all fruits in one single operation</p>
+    </div>
+    <div style="padding:24px">
+      <p class="text-sm mb-5" style="color:var(--text2);line-height:1.8">
+        Instead of scoring one fruit at a time, we can do them <strong style="color:var(--accent1)">all at once</strong>! 
+        Stack all fruit rows into one big matrix, multiply once, and get every score simultaneously.
+      </p>
+
+```
+  <div style="overflow-x:auto;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--accent1);font-family:'IBM Plex Mono',monospace;margin-bottom:10px;letter-spacing:2px">MATRIX MULTIPLICATION: [3×3] × [3×1] = [3×1]</div>
+    <div style="display:flex;align-items:center;gap:10px;min-width:400px">
+      <div>
+        <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;font-family:'IBM Plex Mono',monospace">Fruits [3×3]</div>
+        <table style="border-collapse:separate;border-spacing:3px;font-size:12px">
+          <tr><td class="mcell med">0.6</td><td class="mcell">0.3</td><td class="mcell med">0.5</td></tr>
+          <tr><td class="mcell">0.3</td><td class="mcell high">0.9</td><td class="mcell med">0.6</td></tr>
+          <tr><td class="mcell high">1.0</td><td class="mcell">0.4</td><td class="mcell med">0.5</td></tr>
+        </table>
+      </div>
+      <div style="color:var(--muted2);font-size:22px">×</div>
+      <div>
+        <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;font-family:'IBM Plex Mono',monospace">Weights [3×1]</div>
+        <table style="border-collapse:separate;border-spacing:3px;font-size:12px">
+          <tr><td class="mcell high">1.0</td></tr>
+          <tr><td class="mcell">0.3</td></tr>
+          <tr><td class="mcell">0.2</td></tr>
+        </table>
+      </div>
+      <div style="color:var(--muted2);font-size:22px">=</div>
+      <div>
+        <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;font-family:'IBM Plex Mono',monospace">Scores [3×1]</div>
+        <table style="border-collapse:separate;border-spacing:3px;font-size:12px">
+          <tr><td style="background:rgba(240,180,77,0.2);border:1px solid rgba(240,180,77,0.4);border-radius:6px;padding:6px 10px;font-family:'IBM Plex Mono',monospace;color:var(--accent2);font-weight:bold;text-align:center">0.79</td><td style="color:var(--text2);font-size:11px;padding-left:6px">🍎 Apple</td></tr>
+          <tr><td style="background:rgba(77,158,240,0.15);border:1px solid rgba(77,158,240,0.3);border-radius:6px;padding:6px 10px;font-family:'IBM Plex Mono',monospace;color:#4d9ef0;text-align:center">0.57</td><td style="color:var(--text2);font-size:11px;padding-left:6px">🍌 Banana</td></tr>
+          <tr><td style="background:rgba(77,240,192,0.2);border:1px solid rgba(77,240,192,0.4);border-radius:6px;padding:6px 10px;font-family:'IBM Plex Mono',monospace;color:var(--accent1);font-weight:bold;font-size:15px;text-align:center">1.12</td><td style="color:var(--accent1);font-size:11px;padding-left:6px">🍊 Orange 🏆</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(77,240,192,0.06);border:1px solid rgba(77,240,192,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <p class="text-sm" style="color:var(--text2);line-height:1.8">
+      <strong style="color:var(--accent1)">Why is Orange's score &gt; 1.0?</strong> Because we're not using a regular 0–100 scale. 
+      Raw dot products can exceed 1.0 — that's why real AI applies a 
+      <strong style="color:var(--text)">sigmoid or softmax function</strong> at the end to squish all scores 
+      between 0 and 1. The fruit app does this too (sigmoid activation)!
+    </p>
+  </div>
+
+  <div style="background:var(--res-bg);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--accent1);margin-bottom:6px">⚡ Why GPUs?</div>
+    <p class="text-sm" style="color:var(--text2);line-height:1.7">
+      Our example multiplies a 3×3 matrix. Training GPT-4 multiplies matrices with 
+      dimensions like [4096×4096]. A GPU has <strong style="color:var(--text)">thousands of tiny cores</strong> that 
+      all multiply and add in parallel — making this millions of times faster than a regular computer chip.
+    </p>
+  </div>
+
+  <!-- Quiz -->
+  <div style="background:rgba(77,240,192,0.05);border:1px solid rgba(77,240,192,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--accent1);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🧪 Quick Check</div>
+    <p class="text-sm mb-3" style="color:var(--text)">If we have 100 fruits and 8 nutrients, what size is our fruit matrix?</p>
+    <div id="q4-answers">
+      <button class="quiz-btn" onclick="checkQuiz('q4',this,false)">8 × 100</button>
+      <button class="quiz-btn" onclick="checkQuiz('q4',this,true)">100 × 8</button>
+      <button class="quiz-btn" onclick="checkQuiz('q4',this,false)">100 × 100</button>
+      <button class="quiz-btn" onclick="checkQuiz('q4',this,false)">8 × 8</button>
+    </div>
+    <p id="q4-hint" style="font-size:12px;color:var(--muted2);font-style:italic;margin-top:8px;display:none">💡 Rows = one per fruit (100). Columns = one per nutrient (8). So it's 100 × 8!</p>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <a class="yt-card" href="https://www.youtube.com/watch?v=XkY2DOUCWMU" target="_blank" style="margin-bottom:12px">
+    <div class="yt-thumb" style="font-size:26px">📊<div class="yt-play">▶</div></div>
+    <div style="padding:10px 12px">
+      <div class="yt-title">Matrix Multiplication as Composition — 3Blue1Brown</div>
+      <div class="yt-sub">Visual explanation of what matrix multiplication truly means · 11 min</div>
+    </div>
+  </a>
+
+  <h3 class="text-base font-bold mb-3 mt-4">📚 Go Deeper</h3>
+  <a class="res-link" href="https://ml-cheatsheet.readthedocs.io/en/latest/linear_algebra.html" target="_blank">
+    <span style="font-size:22px">📋</span>
+    <div><div style="font-size:13px;font-weight:bold">ML Cheatsheet — Linear Algebra</div><div style="font-size:11px;color:var(--muted)">Quick reference specifically for machine learning contexts</div></div>
+    <span style="color:var(--accent1);margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://developers.google.com/machine-learning/crash-course/linear-algebra" target="_blank">
+    <span style="font-size:22px">🎓</span>
+    <div><div style="font-size:13px;font-weight:bold">Google ML Crash Course — Linear Algebra</div><div style="font-size:11px;color:var(--muted)">Free course from Google engineers</div></div>
+    <span style="color:var(--accent1);margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- MODAL 5 — Training -->
+
+<div class="modal-overlay" id="m5">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(240,77,77,0.15),rgba(240,77,77,0.04));padding:24px;border-bottom:1px solid rgba(240,77,77,0.15)">
+    <button onclick="closeModal('m5')" class="modal-close">✕</button>
+      <span style="font-size:36px">🧠</span>
+      <h2 class="text-2xl font-black mt-2" style="color:#f04d4d">How AI Actually Learns</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Random guessing → genius in millions of steps</p>
+    </div>
+    <div style="padding:24px">
+
+```
+  <p class="text-sm mb-5" style="color:var(--text2);line-height:1.8">
+    Training a neural network is like learning to ride a bike. You start clueless, fall down (make errors), 
+    adjust what you're doing, and repeat until you're great. 
+    <strong style="color:#f04d4d">The AI does the same thing with numbers!</strong>
+  </p>
+
+  <div style="margin-bottom:20px">
+    <div id="train-display" style="background:var(--res-bg);border:1px solid var(--border);border-radius:12px;padding:16px;min-height:120px">
+      <div style="font-size:11px;color:#f04d4d;margin-bottom:10px;letter-spacing:2px">TRAINING ROUND <span id="train-round">0</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="background:var(--quiz-bg);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+          <div style="color:var(--muted2);font-size:10px">VitC weight</div>
+          <div id="w0" style="color:var(--accent1);font-size:18px">0.50</div>
+        </div>
+        <div style="background:var(--quiz-bg);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+          <div style="color:var(--muted2);font-size:10px">Potas weight</div>
+          <div id="w1" style="color:var(--accent1);font-size:18px">0.50</div>
+        </div>
+        <div style="background:var(--quiz-bg);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+          <div style="color:var(--muted2);font-size:10px">Fiber weight</div>
+          <div id="w2" style="color:var(--accent1);font-size:18px">0.20</div>
+        </div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px">
+        Orange score: <span id="train-score" style="color:var(--accent2)">0.95</span>
+        &nbsp;|&nbsp; Target: <span style="color:#2ecc71">HIGH (>1.0)</span>
+        &nbsp;|&nbsp; Error: <span id="train-error" style="color:#e74c3c">−0.05</span>
+      </div>
+    </div>
+    <button onclick="trainStep()" id="train-btn" style="width:100%;margin-top:10px;background:rgba(240,77,77,0.15);border:1px solid rgba(240,77,77,0.4);border-radius:10px;padding:13px;cursor:pointer;color:#f04d4d;font-family:'Syne',sans-serif;font-weight:bold;font-size:14px">
+      Train One Step →
+    </button>
+    <div id="train-complete" style="display:none;text-align:center;padding:12px;color:#2ecc71;font-style:italic;font-size:13px">
+      ✅ Training complete! The AI learned the correct weights for immunity!
+    </div>
+  </div>
+
+  <div style="background:var(--res-bg);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:#f04d4d;margin-bottom:6px">📐 The Math Behind Training</div>
+    <p class="text-sm" style="color:var(--text2);line-height:1.7;margin-bottom:8px">
+      Each training step uses <strong style="color:var(--text)">calculus (derivatives)</strong> to figure out 
+      which direction to nudge each weight. This is called <em style="color:#f04d4d">gradient descent</em> — 
+      imagine rolling a ball downhill to find the lowest point (lowest error).
+    </p>
+    <div style="background:var(--code-bg);border-radius:8px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;overflow-x:auto">
+      <div style="color:var(--muted2)">// Simplified weight update rule:</div>
+      <div style="color:var(--accent1)">new_weight = old_weight + (learning_rate × error × input)</div>
+      <div style="color:var(--muted2);margin-top:6px">// Do this for every weight, millions of times</div>
+    </div>
+  </div>
+
+  <div style="background:var(--res-bg);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--accent2);margin-bottom:6px">🔢 Real Numbers at Scale</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+      <div style="background:var(--quiz-bg);border-radius:8px;padding:10px">
+        <div style="color:var(--muted2);margin-bottom:4px">Our fruit model</div>
+        <div style="color:var(--text)">48 weights</div>
+        <div style="color:var(--muted2)">~100 training steps</div>
+      </div>
+      <div style="background:var(--quiz-bg);border-radius:8px;padding:10px">
+        <div style="color:var(--muted2);margin-bottom:4px">GPT-3</div>
+        <div style="color:var(--text)">175 billion weights</div>
+        <div style="color:var(--muted2)">300B training tokens</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div style="background:rgba(240,77,77,0.05);border:1px solid rgba(240,77,77,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;color:#f04d4d;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🧪 Quick Check</div>
+    <p class="text-sm mb-3" style="color:var(--text)">What do we call the process of adjusting weights to reduce error?</p>
+    <div id="q5-answers">
+      <button class="quiz-btn" onclick="checkQuiz('q5',this,false)">Matrix Multiplication</button>
+      <button class="quiz-btn" onclick="checkQuiz('q5',this,true)">Gradient Descent</button>
+      <button class="quiz-btn" onclick="checkQuiz('q5',this,false)">The Dot Product</button>
+      <button class="quiz-btn" onclick="checkQuiz('q5',this,false)">A Sigmoid Function</button>
+    </div>
+    <p id="q5-hint" style="font-size:12px;color:var(--muted2);font-style:italic;margin-top:8px;display:none">💡 "Gradient" means slope/direction. "Descent" means going downhill (toward lower error).</p>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <a class="yt-card" href="https://www.youtube.com/watch?v=IHZwWFHWa-w" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">📉<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Gradient Descent, How Neural Nets Learn — 3Blue1Brown</div>
+        <div class="yt-sub">Best visual explanation of backpropagation · 21 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=An5z8lR8asY" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">🎓<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">How AI is Trained — Explained Simply</div>
+        <div class="yt-sub">Zach Star · Very approachable for beginners · 16 min</div>
+      </div>
+    </a>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">📚 Go Deeper</h3>
+  <a class="res-link" href="https://playground.tensorflow.org/" target="_blank">
+    <span style="font-size:22px">🎮</span>
+    <div><div style="font-size:13px;font-weight:bold">TensorFlow Playground — Train a NN Live!</div><div style="font-size:11px;color:var(--muted)">Watch the weights update in real time as the net learns</div></div>
+    <span style="color:#f04d4d;margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://course.fast.ai/" target="_blank">
+    <span style="font-size:22px">🐻</span>
+    <div><div style="font-size:13px;font-weight:bold">fast.ai — Practical Deep Learning (Free)</div><div style="font-size:11px;color:var(--muted)">The best free course to go from beginner to building real AI</div></div>
+    <span style="color:#f04d4d;margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- MODAL 6 — Big Picture -->
+
+<div class="modal-overlay" id="m6">
+  <div class="modal-box">
+    <div style="background:linear-gradient(135deg,rgba(77,158,240,0.15),rgba(77,158,240,0.04));padding:24px;border-bottom:1px solid rgba(77,158,240,0.15)">
+    <button onclick="closeModal('m6')" class="modal-close">✕</button>
+      <span style="font-size:36px">🚀</span>
+      <h2 class="text-2xl font-black mt-2" style="color:#4d9ef0">From Fruits to ChatGPT</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Same math — 10 billion times bigger</p>
+    </div>
+    <div style="padding:24px">
+      <p class="text-sm mb-5" style="color:var(--text2);line-height:1.8">
+        You've now learned the foundation of ALL modern AI. The same matrix × weight × activation 
+        pattern you used for fruits is exactly what powers ChatGPT, image recognition, 
+        translation, self-driving cars, and music generation.
+      </p>
+
+```
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;color:#4d9ef0;font-family:'IBM Plex Mono',monospace;margin-bottom:12px;letter-spacing:2px">SCALE COMPARISON</div>
+    <div id="scale-bars">
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>🍎 Our Fruit Model</span>
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--accent1)">48 weights</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden">
+          <div style="width:2%;height:100%;background:#4df0c0;border-radius:4px;transition:width 1.5s"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>📷 ResNet Image AI</span>
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--accent2)">25 million weights</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden">
+          <div style="width:15%;height:100%;background:#f0b44d;border-radius:4px;transition:width 1.5s 0.2s"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>🎨 DALL-E Image Generator</span>
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--accent3)">3.5 billion weights</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden">
+          <div style="width:45%;height:100%;background:#b44df0;border-radius:4px;transition:width 1.5s 0.4s"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>🤖 GPT-3 / ChatGPT</span>
+          <span style="font-family:'IBM Plex Mono',monospace;color:#f04d4d">175 billion weights</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden">
+          <div style="width:100%;height:100%;background:linear-gradient(90deg,#4d9ef0,#f04d4d);border-radius:4px;transition:width 1.5s 0.6s"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(77,158,240,0.06);border:1px solid rgba(77,158,240,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:#4d9ef0;margin-bottom:8px">🎯 What's Actually Different?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+      <div>
+        <div style="color:var(--muted2);margin-bottom:4px">Our Fruit AI</div>
+        <ul style="color:var(--text2);list-style:none;line-height:1.9">
+          <li>• 1 layer</li>
+          <li>• 8 inputs</li>
+          <li>• 1 output</li>
+          <li>• ~100 steps</li>
+        </ul>
+      </div>
+      <div>
+        <div style="color:var(--muted2);margin-bottom:4px">GPT-4</div>
+        <ul style="color:var(--text2);list-style:none;line-height:1.9">
+          <li>• 96 layers</li>
+          <li>• 50,000 word pieces</li>
+          <li>• Predicts next word</li>
+          <li>• Billions of steps</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--res-bg);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--accent1);margin-bottom:8px">🌟 You Now Know:</div>
+    <div style="font-size:13px;line-height:2;color:var(--text2)">
+      ✅ What a matrix is (a table of numbers)<br/>
+      ✅ What weight vectors are (importance scores)<br/>
+      ✅ How the dot product works (multiply + add)<br/>
+      ✅ Matrix multiplication (all at once)<br/>
+      ✅ How training works (adjust weights to reduce error)<br/>
+      ✅ How it all scales from fruits → ChatGPT
+    </div>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">▶️ Watch on YouTube</h3>
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <a class="yt-card" href="https://www.youtube.com/watch?v=wvWpncAA4bU" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">🤖<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">How Large Language Models Work</div>
+        <div class="yt-sub">Explained simply with great visuals · 17 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=eMlx5fFNoYc" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">🔮<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Attention Is All You Need — The Transformer Explained</div>
+        <div class="yt-sub">The architecture behind ChatGPT and Claude · 20 min</div>
+      </div>
+    </a>
+    <a class="yt-card" href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">
+      <div class="yt-thumb" style="font-size:26px">💻<div class="yt-play">▶</div></div>
+      <div style="padding:10px 12px">
+        <div class="yt-title">Let's Build GPT from Scratch — Andrej Karpathy</div>
+        <div class="yt-sub">For advanced students — actually code a tiny GPT · 2 hrs</div>
+      </div>
+    </a>
+  </div>
+
+  <h3 class="text-base font-bold mb-3">📚 Next Steps for Learning</h3>
+  <a class="res-link" href="https://www.fast.ai/posts/2022-07-21-dl-coders-fastbook.html" target="_blank">
+    <span style="font-size:22px">📖</span>
+    <div><div style="font-size:13px;font-weight:bold">fast.ai — Deep Learning for Coders (Free Book)</div><div style="font-size:11px;color:var(--muted)">The best free textbook on practical deep learning</div></div>
+    <span style="color:#4d9ef0;margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://cs231n.stanford.edu/" target="_blank">
+    <span style="font-size:22px">🎓</span>
+    <div><div style="font-size:13px;font-weight:bold">Stanford CS231n — Convolutional Neural Networks</div><div style="font-size:11px;color:var(--muted)">Free Stanford course notes and slides — the real deal</div></div>
+    <span style="color:#4d9ef0;margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://www.kaggle.com/learn" target="_blank">
+    <span style="font-size:22px">🏆</span>
+    <div><div style="font-size:13px;font-weight:bold">Kaggle Learn — Free AI/ML Courses</div><div style="font-size:11px;color:var(--muted)">Hands-on coding courses with certificates — totally free</div></div>
+    <span style="color:#4d9ef0;margin-left:auto">↗</span>
+  </a>
+  <a class="res-link" href="https://huggingface.co/learn/nlp-course/chapter1/1" target="_blank">
+    <span style="font-size:22px">🤗</span>
+    <div><div style="font-size:13px;font-weight:bold">Hugging Face NLP Course</div><div style="font-size:11px;color:var(--muted)">Learn to use real AI models like the ones powering Claude</div></div>
+    <span style="color:#4d9ef0;margin-left:auto">↗</span>
+  </a>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+
+<footer class="relative z-10 text-center py-12 px-6" style="border-top:1px solid var(--border)">
+  <div style="font-size:11px;color:var(--footer-text);font-family:'IBM Plex Mono',monospace;letter-spacing:2px">MATRIX MATH & AI · MIDDLE SCHOOL EDITION</div>
+  <p style="color:var(--muted2);font-size:12px;margin-top:6px">Built with HTML · Tailwind CSS · Vanilla JavaScript</p>
+</footer>
+
+<script>
+  // ─── Theme toggle ───
+  const html = document.documentElement;
+  let isLight = false;
+
+  // Respect system preference on first load
+  if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+    isLight = true;
+    html.classList.add('light');
+    document.getElementById('toggle-icon').textContent = '☀️';
+    document.getElementById('toggle-label').textContent = 'Light';
+  }
+
+  function toggleTheme() {
+    isLight = !isLight;
+    html.classList.toggle('light', isLight);
+    const icon = document.getElementById('toggle-icon');
+    const label = document.getElementById('toggle-label');
+    if (isLight) {
+      icon.textContent = '☀️';
+      label.textContent = 'Light';
+    } else {
+      icon.textContent = '🌙';
+      label.textContent = 'Dark';
+    }
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  }
+
+  // Restore saved preference
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light' && !isLight) toggleTheme();
+  if (saved === 'dark'  &&  isLight) toggleTheme();
+
+  // ─── Progress bar on scroll ───
+  window.addEventListener('scroll', () => {
+    const max = document.body.scrollHeight - window.innerHeight;
+    document.getElementById('progress-bar').style.width = (window.scrollY / max * 100) + '%';
+  });
+
+  // ─── Modal open/close ───
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+  });
+
+  // ─── Quiz logic ───
+  function checkQuiz(qid, btn, correct) {
+    const container = document.getElementById(qid + '-answers');
+    if (container.querySelector('.correct, .wrong')) return;
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    document.getElementById(qid + '-hint').style.display = 'block';
+    container.querySelectorAll('.quiz-btn').forEach(b => {
+      if (b !== btn) b.style.opacity = '0.4';
+    });
+  }
+
+  // ─── Step reveal (Lesson 3 modal) ───
+  let currentStep = 0;
+  function advanceStep() {
+    if (currentStep >= 3) return;
+    currentStep++;
+    document.getElementById('step' + currentStep).style.opacity = '1';
+    if (currentStep === 3) {
+      document.getElementById('step-btn').textContent = '✅ Complete!';
+      document.getElementById('step-btn').style.opacity = '0.5';
+      document.getElementById('step-btn').style.cursor = 'default';
+    }
+  }
+  function resetSteps() {
+    currentStep = 0;
+    [1,2,3].forEach(i => { document.getElementById('step'+i).style.opacity = '0.3'; });
+    const btn = document.getElementById('step-btn');
+    btn.textContent = 'Reveal Next Step →';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  }
+
+  // ─── Training simulator (Lesson 5 modal) ───
+  let trainState = { w0: 0.5, w1: 0.5, w2: 0.2, round: 0 };
+  const ORANGE = [1.0, 0.4, 0.5];
+
+  function calcScore(w0, w1, w2) { return ORANGE[0]*w0 + ORANGE[1]*w1 + ORANGE[2]*w2; }
+
+  function trainStep() {
+    if (trainState.round >= 6) return;
+    trainState.round++;
+    const score = calcScore(trainState.w0, trainState.w1, trainState.w2);
+    const error = 1.1 - score;
+    trainState.w0 = Math.min(1.0, trainState.w0 + 0.1 * error * ORANGE[0]);
+    trainState.w1 = Math.max(0.2, trainState.w1 - 0.1 * 0.04);
+
+    const newScore = calcScore(trainState.w0, trainState.w1, trainState.w2);
+    const newError = (1.1 - newScore).toFixed(3);
+
+    document.getElementById('train-round').textContent = trainState.round;
+    document.getElementById('w0').textContent = trainState.w0.toFixed(2);
+    document.getElementById('w1').textContent = trainState.w1.toFixed(2);
+    document.getElementById('w2').textContent = trainState.w2.toFixed(2);
+    document.getElementById('train-score').textContent = newScore.toFixed(3);
+    document.getElementById('train-error').textContent = newError > 0 ? '+' + newError : newError;
+    document.getElementById('train-error').style.color = Math.abs(newError) < 0.05 ? '#2ecc71' : '#e74c3c';
+
+    if (trainState.round >= 6) {
+      document.getElementById('train-btn').style.display = 'none';
+      document.getElementById('train-complete').style.display = 'block';
+    }
+  }
+
+  // ─── Staggered card entrance ───
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, 80 * i);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.section-card').forEach((card) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s, border-color 0.3s, background 0.4s';
+    observer.observe(card);
+  });
+</script>
+
+</body>
+</html>
